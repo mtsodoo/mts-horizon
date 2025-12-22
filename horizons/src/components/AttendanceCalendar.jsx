@@ -12,7 +12,8 @@ import {
   addMonths,
   subMonths,
   parseISO,
-  isFuture
+  isFuture,
+  isWithinInterval
 } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, RefreshCw, Calendar as CalendarIcon, CheckCircle, XCircle, Clock, Briefcase, HeartPulse, ShieldAlert, Plane, HelpCircle as CircleHelp } from 'lucide-react';
@@ -43,7 +44,36 @@ const attendanceStatusMap = {
   annual_leave: { label: 'إجازة سنوية', icon: <Plane className="h-3 w-3" />, color: 'bg-lime-500' },
 };
 
-const getDayStatus = (day, records) => {
+// ✅ جديد: أنواع الإجازات
+const leaveTypeMap = {
+  annual: { label: 'إجازة سنوية', icon: <Plane className="h-3 w-3" />, color: 'bg-blue-500' },
+  sick: { label: 'إجازة مرضية', icon: <HeartPulse className="h-3 w-3" />, color: 'bg-cyan-500' },
+  emergency: { label: 'إجازة طارئة', icon: <ShieldAlert className="h-3 w-3" />, color: 'bg-orange-500' },
+  unpaid: { label: 'إجازة بدون راتب', icon: <Plane className="h-3 w-3" />, color: 'bg-gray-500' },
+  other: { label: 'إجازة', icon: <Plane className="h-3 w-3" />, color: 'bg-indigo-500' },
+};
+
+const getDayStatus = (day, records, approvedLeaves) => {
+  // ✅ أولاً: التحقق من الإجازات المعتمدة
+  const leaveForDay = approvedLeaves.find(leave => {
+    if (!leave.start_date || !leave.end_date) return false;
+    const start = parseISO(leave.start_date);
+    const end = parseISO(leave.end_date);
+    return isWithinInterval(day, { start, end });
+  });
+
+  if (leaveForDay) {
+    const leaveType = leaveTypeMap[leaveForDay.leave_type] || leaveTypeMap.other;
+    return {
+      ...leaveType,
+      type: 'on_leave',
+      record: null,
+      leave: leaveForDay,
+      isFinal: false
+    };
+  }
+
+  // ثانياً: التحقق من سجلات الحضور
   const record = records.find(r => isSameDay(parseISO(r.work_date), day));
 
   if (!record) {
@@ -53,19 +83,9 @@ const getDayStatus = (day, records) => {
     return { ...attendanceStatusMap.absent, type: 'absent', isFinal: false };
   }
 
-  // ✅ استخدام البيانات المطبعة
   const justification = record.justification;
   const isFinal = justification && justification.is_final === true;
 
-  console.log('[getDayStatus]', {
-    date: record.work_date,
-    status: record.status,
-    justification_id: record.justification_id,
-    justification: justification,
-    is_final: isFinal
-  });
-
-  // ✅ الأولوية الأولى: غياب نهائي (له justification_id ومرفوض)
   if (record.status === 'absent' && record.justification_id && isFinal) {
     return {
       label: 'غياب نهائي',
@@ -107,7 +127,6 @@ const getDayStatus = (day, records) => {
     };
   }
 
-  console.warn('Unknown status:', record.status, 'for date:', record.work_date);
   return {
     label: `غير معروف (${record.status || 'null'})`,
     icon: <CircleHelp className="h-3 w-3" />,
@@ -122,6 +141,7 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [approvedLeaves, setApprovedLeaves] = useState([]); // ✅ جديد
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(null);
 
@@ -132,7 +152,8 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
       const monthStart = format(startOfMonth(month), 'yyyy-MM-dd');
       const monthEnd = format(endOfMonth(month), 'yyyy-MM-dd');
 
-      const { data, error } = await supabase
+      // ✅ جلب سجلات الحضور
+      const { data: attendanceData, error: attendanceError } = await supabase
         .from('attendance_records')
         .select(`
           *,
@@ -146,18 +167,30 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
         .gte('work_date', monthStart)
         .lte('work_date', monthEnd);
 
-      if (error) throw error;
+      if (attendanceError) throw attendanceError;
 
-      // ✅ تطبيع البيانات - تحويل المصفوفة إلى كائن واحد
-      const normalizedData = (data || []).map(record => ({
+      // ✅ جديد: جلب الإجازات المعتمدة
+      const { data: leavesData, error: leavesError } = await supabase
+        .from('employee_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('request_type', 'leave')
+        .eq('status', 'approved')
+        .or(`start_date.lte.${monthEnd},end_date.gte.${monthStart}`);
+
+      if (leavesError) throw leavesError;
+
+      // تطبيع بيانات الحضور
+      const normalizedData = (attendanceData || []).map(record => ({
         ...record,
         justification: record.absence_justifications && record.absence_justifications.length > 0
           ? record.absence_justifications[0]
           : null
       }));
 
-      console.log('[AttendanceCalendar] Normalized data:', normalizedData);
       setAttendanceRecords(normalizedData);
+      setApprovedLeaves(leavesData || []); // ✅ حفظ الإجازات
+
     } catch (err) {
       console.error('Error fetching attendance data:', err);
       toast({ variant: 'destructive', title: 'خطأ', description: 'فشل في تحميل بيانات الحضور.' });
@@ -179,29 +212,21 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
         schema: 'public',
         table: 'attendance_records',
         filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('Attendance record change received!', payload);
-        fetchAttendanceData(currentMonth);
-      }
-      )
+      }, () => fetchAttendanceData(currentMonth))
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'absence_justifications',
         filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('Absence justification change received!', payload);
-        // تحديث فوري عند أي تغيير في التبريرات (إضافة، تحديث، أو حذف)
-        fetchAttendanceData(currentMonth);
-      }
-      )
-      .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Subscribed to calendar updates');
-        } else if (err) {
-          console.error('Realtime subscription error:', err);
-        }
-      });
+      }, () => fetchAttendanceData(currentMonth))
+      // ✅ جديد: مراقبة تغييرات الطلبات (الإجازات)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'employee_requests',
+        filter: `user_id=eq.${user.id}`
+      }, () => fetchAttendanceData(currentMonth))
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -220,8 +245,6 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
     e.stopPropagation();
     if (typeof onAbsenceDayClick === 'function') {
       onAbsenceDayClick(date);
-    } else {
-      console.error("onAbsenceDayClick is not a function or is not provided.");
     }
   }
 
@@ -243,7 +266,8 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
       );
     }
 
-    const status = getDayStatus(day, attendanceRecords);
+    // ✅ تمرير الإجازات المعتمدة
+    const status = getDayStatus(day, attendanceRecords, approvedLeaves);
 
     return (
       <Dialog key={day.toISOString()} onOpenChange={(isOpen) => !isOpen && setSelectedDay(null)}>
@@ -263,7 +287,6 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
                   <span className="mr-1">{status.label}</span>
                 </Badge>
               )}
-              {/* إخفاء زر التبرير للغياب النهائي */}
               {status?.type === 'absent' && !status?.isFinal && !status?.record?.justification_id && typeof onAbsenceDayClick === 'function' && (
                 <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={(e) => handleJustify(e, day)}>
                   تبرير الغياب
@@ -290,6 +313,15 @@ const AttendanceCalendar = ({ onAbsenceDayClick }) => {
                 {status.record.late_minutes > 0 && (
                   <p><strong>دقائق التأخير:</strong> {status.record.late_minutes} دقيقة</p>
                 )}
+              </div>
+            )}
+            {/* ✅ عرض تفاصيل الإجازة */}
+            {status?.leave && (
+              <div className="mt-4 space-y-2 text-sm bg-blue-50 p-3 rounded-lg">
+                <p><strong>نوع الإجازة:</strong> {status.label}</p>
+                <p><strong>من:</strong> {format(parseISO(status.leave.start_date), 'PPP', { locale: ar })}</p>
+                <p><strong>إلى:</strong> {format(parseISO(status.leave.end_date), 'PPP', { locale: ar })}</p>
+                {status.leave.notes && <p><strong>ملاحظات:</strong> {status.leave.notes}</p>}
               </div>
             )}
           </DialogContent>

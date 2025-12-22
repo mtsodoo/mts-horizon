@@ -2,34 +2,36 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  LayoutDashboard,
-  CalendarCheck,
-  Briefcase,
-  ListChecks,
-  Banknote,
-  Users,
-  Sparkles,
-  Shield,
-  ClipboardList,
-  Activity,
-  AlertTriangle,
-  MessageSquare,
-  CalendarDays,
-  Wallet,
-  Clock,
-  Bell,
-  FolderOpen,
-  Stamp,
-  FolderKanban,
-  Settings,
-  BarChart,
-  FileText,
-  UserCheck,
-  DollarSign,
-  Package,
-  Truck,
-  MessageCircle,
+import { 
+  LayoutDashboard, 
+  CalendarCheck, 
+  Briefcase, 
+  ListChecks, 
+  Banknote, 
+  Users, 
+  Sparkles, 
+  Shield, 
+  ClipboardList, 
+  Activity, 
+  AlertTriangle, 
+  MessageSquare, 
+  CalendarDays, 
+  Wallet, 
+  Clock, 
+  Bell, 
+  FolderOpen, 
+  Stamp, 
+  FolderKanban, 
+  Settings, 
+  BarChart, 
+  FileText, 
+  UserCheck, 
+  DollarSign, 
+  Package, 
+  Truck, 
+  MessageCircle, 
+  User, 
+  Trophy 
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { usePermission } from '@/contexts/PermissionContext';
@@ -45,6 +47,7 @@ const Sidebar = ({ className }) => {
     // ═══════════════════════════════════════════════════════════════
     const personalItems = [
         { to: '/', icon: LayoutDashboard, label: 'لوحة التحكم', permission: 'dashboard' },
+        { to: '/profile', icon: User, label: 'ملفي الشخصي', permission: 'profile' },
         { to: '/attendance', icon: Clock, label: 'حضوري', permission: 'my_attendance' },
         { to: '/my-requests', icon: ClipboardList, label: 'طلباتي', permission: 'my_requests' },
         { to: '/my-tasks', icon: ListChecks, label: 'مهامي', permission: 'my_tasks' },
@@ -69,6 +72,8 @@ const Sidebar = ({ className }) => {
         { to: '/employees', icon: Users, label: 'دليل الموظفين', permission: 'employees' },
         { to: '/employee-management', icon: UserCheck, label: 'إدارة الموظفين', permission: 'employee_management' },
         { to: '/attendance-management', icon: CalendarCheck, label: 'إدارة الحضور', permission: 'attendance_management' },
+        { to: '/team-attendance', icon: CalendarDays, label: 'سجل الحضور الشهري', permission: 'attendance_management' },
+        { to: '/admin-calendar-panel', icon: CalendarCheck, label: 'لوحة كالندر الموظفين', permission: 'admin_calendar_panel' },
         { to: '/task-management', icon: ListChecks, label: 'إدارة المهام', permission: 'task_management' },
         { to: '/leave-management', icon: CalendarDays, label: 'إدارة الإجازات', permission: 'leave_management' },
         { to: '/risk-dashboard', icon: AlertTriangle, label: 'تحليل المخاطر', permission: 'risk_dashboard' },
@@ -88,9 +93,19 @@ const Sidebar = ({ className }) => {
     // ═══════════════════════════════════════════════════════════════
     const financeItems = [
         { to: '/financial-management', icon: DollarSign, label: 'الإدارة المالية', permission: 'financial_management' },
+        { to: '/financial-management/match-management', icon: Trophy, label: 'إدارة المباريات', permission: 'financial_management' },
+        { to: '/financial-management/match-data-entry', icon: Trophy, label: 'إدخال بيانات المباريات', permission: 'match_data_entry' },
         { to: '/payroll', icon: Wallet, label: 'مسير الرواتب', permission: 'payroll' },
         { to: '/loan-management', icon: Banknote, label: 'إدارة السلف', permission: 'loan_management' },
         { to: '/custody-management', icon: Briefcase, label: 'إدارة العهد', permission: 'custody_management' },
+    ];
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🌐 EXTERNAL PORTALS - بوابات خارجية
+    // ═══════════════════════════════════════════════════════════════
+    const externalPortalsItems = [
+        { to: '/customer/login', icon: Users, label: 'بوابة العملاء', permission: 'customer_portal_access' },
+        { to: '/delivery/login', icon: Truck, label: 'بوابة المندوبين', permission: 'delivery_portal_access' },
     ];
 
     // ═══════════════════════════════════════════════════════════════
@@ -173,6 +188,7 @@ const Sidebar = ({ className }) => {
                 {renderSection('الإدارة', managementItems, Users)}
                 {renderSection('المشاريع', projectsItems, FolderKanban)}
                 {renderSection('المالية', financeItems, Wallet)}
+                {renderSection('بوابات خارجية', externalPortalsItems, Users)}
                 {renderSection('النظام', systemItems, Settings)}
             </nav>
 
