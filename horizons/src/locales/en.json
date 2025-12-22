@@ -1,0 +1,94 @@
+{
+  "translation": {
+    "appName": "MTS Supreme ERP",
+    "lang": {
+      "toggle": "تبديل اللغة"
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "attendance": "Attendance",
+      "projects": "Projects",
+      "tasks": "Tasks",
+      "employees_hr": "Employees",
+      "payroll": "Payroll",
+      "purchasing": "Purchasing",
+      "calendar": "Calendar & Events",
+      "notifications": "Notifications",
+      "settings": "Settings",
+      "logout": "تسجيل الخروج"
+    },
+    "login": {
+      "title": "Welcome Back!",
+      "subtitle": "Log in to your MTS Supreme ERP account",
+      "emailLabel": "Email Address",
+      "passwordLabel": "Password",
+      "button": "Log In"
+    },
+    "welcome": {
+      "greeting": "Welcome"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "adminTitle": "Admin Dashboard",
+      "quickActions": "Quick Actions",
+      "checkIn": "Check In",
+      "checkOut": "Check Out",
+      "summary": "Your Summary",
+      "daysPresent": "Days Present",
+      "daysLate": "Days Late",
+      "daysAbsent": "Days Absent",
+      "tasksInProgress": "Tasks In Progress",
+      "quoteOfTheDay": "Quote of the Day",
+      "leaderboard": "Team Leaderboard",
+      "adminSummary": "Organization Summary",
+      "totalEmployees": "Total Employees",
+      "totalProjects": "Total Projects",
+      "pendingRequests": "Pending Requests"
+    },
+    "attendance": {
+      "title": "Attendance Management",
+      "date": "Date",
+      "checkIn": "Check-In",
+      "checkOut": "Check-Out",
+      "status": "Status",
+      "noRecords": "No records found for this week.",
+      "currentWeekLog": "Current Week's Log",
+      "adminView": "Attendance Log - All Employees",
+      "checkInSuccess": "Check-In Successful!",
+      "checkedInAt": "You checked in at",
+      "checkOutSuccess": "Check-Out Successful!",
+      "checkedOutAt": "You checked out at",
+      "alreadyCheckedIn": "You have already checked in today.",
+      "notCheckedIn": "You have not checked in yet today.",
+      "alreadyCheckedOut": "You have already checked out for the day.",
+      "filterByUser": "Filter by user...",
+      "allUsers": "All Users",
+      "late": "Late"
+    },
+    "employees": {
+      "title": "Employee Management",
+      "addEmployee": "Add Employee",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions",
+      "edit": "Edit",
+      "view": "View",
+      "noEmployees": "No employees found.",
+      "editEmployee": "Edit Employee",
+      "employeeDetails": "Employee Details",
+      "fullName": "Full Name",
+      "department": "Department",
+      "joinDate": "Join Date",
+      "basicSalary": "Basic Salary",
+      "housingAllowance": "Housing Allowance",
+      "transportAllowance": "Transport Allowance",
+      "gosiNumber": "GOSI Number",
+      "insuranceNumber": "Insurance Number",
+      "contractType": "Contract Type",
+      "saveChanges": "Save Changes",
+      "cancel": "Cancel"
+    }
+  }
+}

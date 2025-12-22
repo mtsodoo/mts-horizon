@@ -1,0 +1,94 @@
+{
+  "translation": {
+    "appName": "MTS Supreme ERP",
+    "lang": {
+      "toggle": "تبديل اللغة"
+    },
+    "sidebar": {
+      "dashboard": "لوحة التحكم",
+      "attendance": "الحضور",
+      "projects": "المشاريع",
+      "tasks": "المهام",
+      "employees_hr": "الموظفين",
+      "payroll": "الرواتب",
+      "purchasing": "المشتريات",
+      "calendar": "التقويم والأحداث",
+      "notifications": "الإشعارات",
+      "settings": "الإعدادات",
+      "logout": "تسجيل الخروج"
+    },
+    "login": {
+      "title": "أهلاً بعودتك!",
+      "subtitle": "سجل الدخول إلى حسابك في نظام MTS Supreme ERP",
+      "emailLabel": "البريد الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "button": "تسجيل الدخول"
+    },
+    "welcome": {
+      "greeting": "مرحباً"
+    },
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "adminTitle": "لوحة تحكم المسؤول",
+      "quickActions": "إجراءات سريعة",
+      "checkIn": "تسجيل الحضور",
+      "checkOut": "تسجيل الانصراف",
+      "summary": "ملخصك",
+      "daysPresent": "أيام الحضور",
+      "daysLate": "أيام التأخير",
+      "daysAbsent": "أيام الغياب",
+      "tasksInProgress": "مهام قيد التنفيذ",
+      "quoteOfTheDay": "حكمة اليوم",
+      "leaderboard": "لوحة الصدارة",
+      "adminSummary": "ملخص المنظمة",
+      "totalEmployees": "إجمالي الموظفين",
+      "totalProjects": "إجمالي المشاريع",
+      "pendingRequests": "الطلبات المعلقة"
+    },
+    "attendance": {
+      "title": "إدارة الحضور",
+      "date": "التاريخ",
+      "checkIn": "وقت الحضور",
+      "checkOut": "وقت الانصراف",
+      "status": "الحالة",
+      "noRecords": "لا توجد سجلات لهذا الأسبوع.",
+      "currentWeekLog": "سجل الأسبوع الحالي",
+      "adminView": "سجل الحضور - جميع الموظفين",
+      "checkInSuccess": "تم تسجيل الحضور بنجاح!",
+      "checkedInAt": "لقد سجلت حضورك في",
+      "checkOutSuccess": "تم تسجيل الانصراف بنجاح!",
+      "checkedOutAt": "لقد سجلت انصرافك في",
+      "alreadyCheckedIn": "لقد سجلت حضورك بالفعل اليوم.",
+      "notCheckedIn": "لم تقم بتسجيل الحضور بعد.",
+      "alreadyCheckedOut": "لقد سجلت انصرافك لهذا اليوم.",
+      "filterByUser": "تصفية حسب المستخدم...",
+      "allUsers": "كل المستخدمين",
+      "late": "متأخر"
+    },
+    "employees": {
+      "title": "إدارة الموظفين",
+      "addEmployee": "إضافة موظف",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "edit": "تعديل",
+      "view": "عرض",
+      "noEmployees": "لم يتم العثور على موظفين.",
+      "editEmployee": "تعديل الموظف",
+      "employeeDetails": "تفاصيل الموظف",
+      "fullName": "الاسم الكامل",
+      "department": "القسم",
+      "joinDate": "تاريخ الانضمام",
+      "basicSalary": "الراتب الأساسي",
+      "housingAllowance": "بدل السكن",
+      "transportAllowance": "بدل النقل",
+      "gosiNumber": "رقم التأمينات الاجتماعية",
+      "insuranceNumber": "رقم التأمين",
+      "contractType": "نوع العقد",
+      "saveChanges": "حفظ التغييرات",
+      "cancel": "إلغاء"
+    }
+  }
+}
