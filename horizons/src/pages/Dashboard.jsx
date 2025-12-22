@@ -228,6 +228,14 @@ const ALL_ACTIONS = [
   permission: 'omar_conversations_management',
   category: 'MANAGEMENT'
 },
+{
+  id: 'admin_calendar',
+  title: 'لوحة كالندر الموظفين',
+  icon: CalendarDays,
+  route: '/admin-calendar-panel',
+  permission: 'admin_calendar_panel',
+  category: 'MANAGEMENT'
+},
 // 🏗️ Projects
 {
   id: 'projects',
@@ -522,115 +530,6 @@ const SalaryPerformanceCard = ({
 };
 
 // ========================================
-// 👥 TEAM DAILY OVERVIEW COMPONENT
-// ========================================
-const TeamDailyOverview = () => {
-  const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
-
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      // Get all active employees except general_manager and ai_manager
-      const { data: emps } = await supabase
-        .from('profiles')
-        .select('id, name_ar, employee_number')
-        .eq('is_active', true)
-        .not('role', 'in', '("general_manager","ai_manager")');
-
-      // Get today's attendance
-      const { data: attendance } = await supabase
-        .from('attendance_records')
-        .select('*')
-        .eq('work_date', todayStr);
-
-      // Get today's bot messages (alerts)
-      const { data: alerts } = await supabase
-        .from('bot_messages')
-        .select('*')
-        .gte('created_at', todayStr);
-
-      // Get active tasks
-      const { data: tasks } = await supabase
-        .from('tasks')
-        .select('assigned_to')
-        .eq('status', 'in_progress');
-
-      // Get today's requests
-      const { data: requests } = await supabase
-        .from('employee_requests')
-        .select('user_id')
-        .gte('created_at', todayStr);
-
-      // Combine data for each employee
-      const combined = (emps || []).map(emp => {
-        const att = attendance?.find(a => a.user_id === emp.id);
-        const hasAlert = alerts?.some(a => a.employee_id === emp.id);
-        const hasResponse = alerts?.some(a => a.employee_id === emp.id && a.response);
-        const hasTask = tasks?.some(t => t.assigned_to === emp.id);
-        const hasRequest = requests?.some(r => r.user_id === emp.id);
-        
-        return {
-          ...emp,
-          check_in: att?.check_in,
-          check_out: att?.check_out,
-          hasAlert,
-          hasResponse,
-          hasTask,
-          hasRequest
-        };
-      });
-
-      setEmployees(combined);
-      setLoading(false);
-    };
-
-    fetchTeamData();
-  }, [todayStr]);
-
-  if (loading) return <div className="text-center py-8">جاري التحميل...</div>;
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {employees.map(emp => (
-        <div key={emp.id} className="bg-white border rounded-xl p-4 shadow-sm">
-          <h4 className="font-bold text-sm mb-3 text-gray-800">{emp.name_ar}</h4>
-          <div className="grid grid-cols-2 gap-2">
-            {/* Row 1: Check in/out */}
-            <div className={`p-2 rounded-lg text-center text-xs ${emp.check_in ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
-              <LogIn className="w-4 h-4 mx-auto mb-1" />
-              <span>{emp.check_in ? format(new Date(emp.check_in), 'HH:mm') : '--:--'}</span>
-            </div>
-            <div className={`p-2 rounded-lg text-center text-xs ${emp.check_out ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-400'}`}>
-              <LogOut className="w-4 h-4 mx-auto mb-1" />
-              <span>{emp.check_out ? format(new Date(emp.check_out), 'HH:mm') : '--:--'}</span>
-            </div>
-            {/* Row 2: Alert/Response */}
-            <div className={`p-2 rounded-lg text-center text-xs ${emp.hasAlert ? 'bg-yellow-50 text-yellow-700' : 'bg-gray-100 text-gray-400'}`}>
-              <AlertTriangle className="w-4 h-4 mx-auto mb-1" />
-              <span>{emp.hasAlert ? '✓' : '✗'}</span>
-            </div>
-            <div className={`p-2 rounded-lg text-center text-xs ${emp.hasResponse ? 'bg-purple-50 text-purple-700' : 'bg-gray-100 text-gray-400'}`}>
-              <MessageSquare className="w-4 h-4 mx-auto mb-1" />
-              <span>{emp.hasResponse ? '✓' : '✗'}</span>
-            </div>
-            {/* Row 3: Task/Request */}
-            <div className={`p-2 rounded-lg text-center text-xs ${emp.hasTask ? 'bg-teal-50 text-teal-700' : 'bg-gray-100 text-gray-400'}`}>
-              <ListTodo className="w-4 h-4 mx-auto mb-1" />
-              <span>{emp.hasTask ? '✓' : '✗'}</span>
-            </div>
-            <div className={`p-2 rounded-lg text-center text-xs ${emp.hasRequest ? 'bg-orange-50 text-orange-700' : 'bg-gray-100 text-gray-400'}`}>
-              <FileText className="w-4 h-4 mx-auto mb-1" />
-              <span>{emp.hasRequest ? '✓' : '✗'}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ========================================
 // 🏠 MAIN DASHBOARD PAGE
 // ========================================
 const DashboardPage = () => {
@@ -768,6 +667,10 @@ const DashboardPage = () => {
       if (action.id === 'team_attendance') {
         const userRole = profile?.role;
         return (userRole === 'general_manager' || userRole === 'operations_manager');
+      }
+      // Added condition to hide 'لوحة كالندر الموظفين' unless permission 'admin_calendar_panel' is explicitly granted
+      if (action.id === 'admin_calendar') {
+        return checkPermission('admin_calendar_panel');
       }
       return checkPermission(action.permission);
     });
@@ -914,20 +817,26 @@ const DashboardPage = () => {
           </Card>
         )}
 
-        {/* ═══ NEW SECTION: Team Daily Overview (Managers Only) ═══ */}
-        {(profile?.role === 'general_manager' || profile?.role === 'operations_manager') && (
-          <Card className="bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-indigo-500">
+        {/* ═══ كالندر الموظفين (للمدير العام فقط) ═══ */}
+        {profile?.role === 'general_manager' && (
+          <Card 
+            className="bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-indigo-500 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => navigate('/admin-calendar-panel')}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="p-1.5 bg-indigo-100 rounded-md">
-                  <Users className="h-4 w-4 text-indigo-600" />
+                  <CalendarDays className="h-4 w-4 text-indigo-600" />
                 </div>
-                <span>متابعة الموظفين اليومية</span>
+                <span>لوحة كالندر الموظفين</span>
               </CardTitle>
-              <CardDescription className="text-xs">نظرة سريعة على حالة جميع الموظفين اليوم</CardDescription>
+              <CardDescription className="text-xs">عرض كالندر الحضور لجميع الموظفين</CardDescription>
             </CardHeader>
             <CardContent>
-              <TeamDailyOverview />
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>اضغط لعرض الكالندر الكامل</span>
+                <ArrowRight className="h-4 w-4" />
+              </div>
             </CardContent>
           </Card>
         )}
@@ -1006,7 +915,8 @@ const DashboardPage = () => {
               </div>
             </Card>}
         </div>
-      </motion.div>
+    </motion.div>
+      <OmarAssistant />
     </>;
 };
 
