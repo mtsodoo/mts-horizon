@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
@@ -15,11 +16,12 @@ import { handleSupabaseError } from '@/utils/supabaseErrorHandler';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
 import { logSystemActivity } from '@/utils/omarTools';
+import { notifyManagerNewRequest } from '@/utils/notificationService';
 
 dayjs.locale('ar');
 
 const RequestLeave = () => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const navigate = useNavigate();
     const [submitting, setSubmitting] = useState(false);
     const [leaveBalance, setLeaveBalance] = useState(0);
@@ -96,6 +98,7 @@ const RequestLeave = () => {
 
         setSubmitting(true);
         try {
+            // Prepare request data based on employee_requests schema
             const requestData = {
                 user_id: user.id,
                 request_type: 'leave',
@@ -103,9 +106,9 @@ const RequestLeave = () => {
                 description: formData.description || null,
                 start_date: formData.start_date,
                 end_date: formData.end_date,
-                total_days: formData.total_days,
-                status: 'pending',
-                created_at: new Date().toISOString(),
+                total_days: formData.total_days
+                // status is handled by DB default ('pending')
+                // created_at is handled by DB default (now())
             };
 
             const { data, error } = await supabase
@@ -128,9 +131,21 @@ const RequestLeave = () => {
                 data[0].id
             );
 
+            try {
+              await notifyManagerNewRequest(
+                '0539755999',
+                profile?.name_ar || 'موظف',
+                'leave',
+                data?.[0]?.request_number || '',
+                `من: ${formData.start_date}\nإلى: ${formData.end_date}\nالسبب: ${formData.description || ''}`
+              );
+            } catch (e) {
+              console.log('WhatsApp notification failed:', e);
+            }
+
             message.success('✅ تم إرسال طلب الإجازة بنجاح!');
 
-            // 🔥 تصحيح المسار: العودة للرئيسية
+            // العودة للرئيسية
             navigate('/dashboard');
 
         } catch (error) {

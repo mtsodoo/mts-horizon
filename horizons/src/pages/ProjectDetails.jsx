@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Helmet } from 'react-helmet';
-import { FolderOpen, Calendar, Users, DollarSign, CheckSquare, Clock, FileText, PlusCircle } from 'lucide-react';
+import { FolderOpen, Calendar, Users, DollarSign, CheckSquare, Clock, FileText, PlusCircle, MessageSquare } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -147,6 +148,14 @@ const ProjectDetails = () => {
               <span>الإجمالي: {tasks.length}</span>
             </div>
           </div>
+        </div>
+
+        {/* New button for Project Discussion */}
+        <div className="flex justify-end">
+            <Button variant="outline" onClick={() => navigate(`/projects/${projectId}/discussion`)} className="gap-2">
+                <MessageSquare className="w-4 h-4" />
+                مناقشة المشروع
+            </Button>
         </div>
 
         <Tabs defaultValue="tasks" className="w-full">

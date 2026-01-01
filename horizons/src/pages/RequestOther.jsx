@@ -12,9 +12,10 @@ import { Label } from '@/components/ui/label';
 import { HelpCircle, Send } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { logSystemActivity } from '@/utils/omarTools';
+import { notifyManagerNewRequest } from '@/utils/notificationService';
 
 const RequestOther = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -64,6 +65,14 @@ const RequestOther = () => {
         'REQUEST', 
         { type: 'other', title: formData.title }, 
         data.id
+      );
+
+      // Notify Manager
+      await notifyManagerNewRequest(
+        '0539755999',
+        profile?.name_ar || user.email,
+        'other',
+        `العنوان: ${formData.title}`
       );
 
       // Success feedback

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -17,13 +16,12 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { handleSupabaseError } from '@/utils/supabaseErrorHandler';
 import { formatCurrency } from '@/utils/financialUtils';
-// 🔥 استيراد أداة التسجيل لتوثيق قرارات المدير
 import { logSystemActivity } from '@/utils/omarTools';
+import { notifyRequestApproved, notifyRequestRejected } from '@/utils/notificationService';
 
 const OperationsPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("leave");
-  // Added 'other' to state
   const [requests, setRequests] = useState({ leave: [], custody: [], loan: [], permission: [], other: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,9 +42,8 @@ const OperationsPage = () => {
     if (!user) return [];
     let query;
     try {
-      // بناء الاستعلام بناءً على التبويب
       query = supabase.from('employee_requests')
-        .select(`*, user:profiles!employee_requests_user_id_fkey(name_ar, department)`)
+        .select(`*, user:profiles!employee_requests_user_id_fkey(name_ar, department, phone)`)
         .eq('status', 'pending');
 
       switch (type) {
@@ -118,6 +115,10 @@ const OperationsPage = () => {
 
   const handleApprovalAction = async (status) => {
     if (!selectedRequest) return;
+    
+    // منع الضغط المتكرر
+    if (submitting) return;
+    
     if (status === 'rejected' && !reviewNotes.trim()) {
       message.error('ملاحظات الرفض مطلوبة.');
       return;
@@ -139,19 +140,10 @@ const OperationsPage = () => {
 
       if (updateError) throw updateError;
 
-      // منطق خاص للعهد: إنشاء تسوية
-      if (selectedRequest.request_type === 'custody' && status === 'approved') {
-        await supabase.from('custody_settlements').insert({
-          custody_request_id: selectedRequest.id,
-          user_id: selectedRequest.user_id,
-          custody_amount: selectedRequest.amount,
-          status: 'open',
-          total_expenses: 0,
-          remaining_amount: selectedRequest.amount
-        });
-      }
+      // ✅ ملاحظة مهمة: إنشاء custody_settlements يتم تلقائياً عبر Trigger في قاعدة البيانات
+      // الـ Trigger اسمه: trigger_create_custody_settlement
+      // لا نحتاج إنشاءه هنا لتجنب التكرار
 
-      // 🔥 تسجيل القرار في سجل الأنشطة (Activity Log)
       const actionType = 'ADMIN_DECISION'; 
       const decisionText = status === 'approved' ? 'الموافقة على' : 'رفض';
       const typeLabel = getRequestTypeLabel(selectedRequest.request_type);
@@ -171,6 +163,40 @@ const OperationsPage = () => {
         },
         selectedRequest.id
       );
+
+      if (status === 'approved') {
+        const { data: empData } = await supabase
+          .from('profiles')
+          .select('phone, name_ar')
+          .eq('id', selectedRequest.user_id)
+          .single();
+
+        if (empData?.phone) {
+          await notifyRequestApproved(
+            empData.phone,
+            empData.name_ar,
+            selectedRequest.request_type,
+            selectedRequest.request_number || selectedRequest.id,
+            `تمت الموافقة على طلبك`
+          );
+        }
+      } else {
+        const { data: empData } = await supabase
+          .from('profiles')
+          .select('phone, name_ar')
+          .eq('id', selectedRequest.user_id)
+          .single();
+
+        if (empData?.phone) {
+          await notifyRequestRejected(
+            empData.phone,
+            empData.name_ar,
+            selectedRequest.request_type,
+            selectedRequest.request_number || selectedRequest.id,
+            reviewNotes || 'لم يتم تحديد السبب'
+          );
+        }
+      }
 
       message.success(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح`);
       fetchAllData();
@@ -208,7 +234,6 @@ const OperationsPage = () => {
             </div>
         )}
         
-        {/* عرض تفاصيل التواريخ إذا كانت إجازة */}
         {r.request_type === 'leave' && r.start_date && r.end_date && (
            <div className="flex items-start gap-3 p-3 rounded-md bg-muted/50 md:col-span-2">
               <Calendar className="h-5 w-5 text-muted-foreground mt-1" />
@@ -282,7 +307,6 @@ const OperationsPage = () => {
                           <TableRow>
                             <TableHead>الموظف</TableHead>
                             <TableHead>التفاصيل</TableHead>
-                            {/* إضافة أعمدة خاصة للإجازات */}
                             {t.value === 'leave' && (
                               <>
                                 <TableHead>من تاريخ</TableHead>
@@ -297,10 +321,8 @@ const OperationsPage = () => {
                         </TableHeader>
                         <TableBody>
                           {t.data.map(req => {
-                            // حساب عدد الأيام للإجازات
                             let daysCount = 0;
                             if (t.value === 'leave' && req.start_date && req.end_date) {
-                              // نضيف 1 لأن الفرق بين نفس اليوم هو 0 بينما هو يوم واحد إجازة
                               daysCount = differenceInDays(parseISO(req.end_date), parseISO(req.start_date)) + 1;
                             } else if (req.total_days) {
                               daysCount = req.total_days;
@@ -317,7 +339,6 @@ const OperationsPage = () => {
                                 )}
                               </TableCell>
                               
-                              {/* عرض خلايا التواريخ للإجازات */}
                               {t.value === 'leave' && (
                                 <>
                                   <TableCell className="whitespace-nowrap">

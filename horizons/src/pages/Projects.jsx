@@ -67,6 +67,16 @@ const Projects = () => {
     setIsTaskModalOpen(true);
   };
 
+  // ✅ معالجة إنهاء المشروع
+  const handleProjectComplete = (projectId) => {
+    // تحديث محلي سريع
+    setProjects(prev => prev.map(p => 
+      p.id === projectId 
+        ? { ...p, status: 'completed', progress_percentage: 100 }
+        : p
+    ));
+  };
+
   const handleTaskCreated = async (values) => {
       try {
         const { error } = await supabase.from('tasks').insert({
@@ -101,11 +111,24 @@ const Projects = () => {
       }
   };
 
+  // ✅ إحصائيات محسّنة
   const stats = {
     total: projects.length,
     active: projects.filter(p => p.status === 'active').length,
-    delayed: projects.filter(p => p.progress_percentage < 100 && new Date(p.end_date) < new Date()).length,
-    successRate: projects.length ? Math.round((projects.filter(p => p.status === 'completed').length / projects.length) * 100) : 0
+    delayed: projects.filter(p => {
+      // المشروع متأخر إذا: غير مكتمل + تاريخ الانتهاء فات
+      return p.status !== 'completed' && 
+             p.status !== 'cancelled' && 
+             p.end_date && 
+             new Date(p.end_date) < new Date();
+    }).length,
+    // ✅ نسبة الإنجاز = المشاريع المكتملة ÷ إجمالي المشاريع (بدون الملغية)
+    successRate: (() => {
+      const nonCancelled = projects.filter(p => p.status !== 'cancelled');
+      if (nonCancelled.length === 0) return 0;
+      const completed = nonCancelled.filter(p => p.status === 'completed').length;
+      return Math.round((completed / nonCancelled.length) * 100);
+    })()
   };
 
   const filteredProjects = projects.filter(p => {
@@ -167,6 +190,7 @@ const Projects = () => {
                 key={project.id} 
                 project={project} 
                 onCreateTask={handleCreateTaskClick}
+                onProjectComplete={handleProjectComplete}
               />
             ))}
           </div>
@@ -177,7 +201,7 @@ const Projects = () => {
             onCancel={() => setIsTaskModalOpen(false)}
             onFinish={handleTaskCreated}
             employees={employees}
-            projects={projects} // Not needed for logic as we pass ID, but component might expect it
+            projects={projects}
             defaultProjectId={selectedProjectForTask?.id}
             defaultProjectName={selectedProjectForTask?.name}
         />

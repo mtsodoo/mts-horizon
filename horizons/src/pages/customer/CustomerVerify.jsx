@@ -1,11 +1,11 @@
 
-// src/pages/customer/CustomerVerify.jsx
-// صفحة التحقق من رمز OTP للعملاء
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Smartphone, Loader2, ArrowRight, RefreshCw, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function CustomerVerify() {
   const navigate = useNavigate();
@@ -169,25 +169,21 @@ export default function CustomerVerify() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-        
-        {/* Header */}
-        <div className="bg-[#714b67] text-white p-6 text-center">
-          <div className="w-16 h-16 bg-white/15 rounded-full flex items-center justify-center mx-auto mb-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
+      <Card className="w-full max-w-md border-t-4 border-blue-600 shadow-lg">
+        <CardHeader className="text-center pb-2">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-bold mb-2">تحقق من رمز OTP</h1>
-          <p className="text-sm opacity-90">تم إرسال رمز التحقق إلى جوالك</p>
-        </div>
+          <CardTitle className="text-2xl font-bold text-gray-800">تحقق من رمز OTP</CardTitle>
+          <CardDescription>تم إرسال رمز التحقق إلى جوالك</CardDescription>
+        </CardHeader>
 
-        {/* Content */}
-        <div className="p-6">
-          
+        <CardContent className="space-y-6">
           {/* معلومات العميل */}
-          <div className="bg-gray-50 border rounded-lg p-4 mb-6 text-center border-r-4 border-r-[#714b67]">
+          <div className="bg-gray-50 border rounded-lg p-4 text-center border-r-4 border-r-blue-600">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <Smartphone className="w-4 h-4 text-[#714b67]" />
+              <Smartphone className="w-4 h-4 text-blue-600" />
               <span className="font-semibold text-gray-800 font-mono" dir="ltr">
                 +966{customer.phone}
               </span>
@@ -198,52 +194,50 @@ export default function CustomerVerify() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleVerify}>
-            <div className="mb-6">
-              <input
-                ref={inputRef}
-                type="tel"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                maxLength={6}
-                className="w-full px-4 py-4 border-2 rounded-lg text-center font-mono text-3xl tracking-[0.5em] focus:ring-2 focus:ring-[#714b67] focus:border-[#714b67]"
-                disabled={loading}
-                autoComplete="one-time-code"
-              />
-            </div>
+          <form onSubmit={handleVerify} className="space-y-6">
+            <Input
+              ref={inputRef}
+              type="tel"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
+              maxLength={6}
+              className="text-center font-mono text-3xl tracking-[0.5em] h-14"
+              disabled={loading}
+              autoComplete="one-time-code"
+            />
 
-            <button
+            <Button
               type="submit"
               disabled={loading || otp.length !== 6}
-              className="w-full bg-[#714b67] hover:bg-[#875a7b] text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-lg"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin ml-2" />
                   جاري التحقق...
                 </>
               ) : (
                 <>
-                  <CheckCircle className="w-5 h-5" />
+                  <CheckCircle className="w-5 h-5 ml-2" />
                   تأكيد الرمز
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
           {/* إعادة الإرسال */}
-          <div className="mt-6 text-center">
+          <div className="text-center">
             {canResend ? (
               <button
                 onClick={handleResend}
                 disabled={resending}
-                className="text-[#714b67] hover:text-[#875a7b] text-sm font-medium flex items-center justify-center gap-2 mx-auto"
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center justify-center gap-2 mx-auto"
               >
                 {resending ? (
                   <>
@@ -263,21 +257,18 @@ export default function CustomerVerify() {
               </p>
             )}
           </div>
+        </CardContent>
 
-        </div>
-
-        {/* Footer */}
-        <div className="bg-gray-50 border-t px-6 py-4 text-center">
+        <div className="bg-gray-50 border-t px-6 py-4 text-center rounded-b-xl">
           <a 
             href="/customer/login" 
-            className="text-sm text-gray-500 hover:text-[#714b67] flex items-center justify-center gap-2"
+            className="text-sm text-gray-500 hover:text-blue-600 flex items-center justify-center gap-2"
           >
             <ArrowRight className="w-4 h-4" />
             العودة لتسجيل الدخول
           </a>
         </div>
-
-      </div>
+      </Card>
     </div>
   );
 }

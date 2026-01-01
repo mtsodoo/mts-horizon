@@ -1,12 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
+import { useNavigate } from 'react-router-dom';
 import PageTitle from '@/components/PageTitle';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Wallet, CheckCircle, XCircle, AlertCircle, Info, ShieldCheck, FileText, Printer, Download } from 'lucide-react';
 import { message, Spin, Empty, Modal, Input } from 'antd';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -18,13 +21,17 @@ import { ar } from 'date-fns/locale';
 const { TextArea } = Input;
 
 const LoanManagement = () => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [loanRequests, setLoanRequests] = useState([]);
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [reviewNotes, setReviewNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Only General Manager can approve/reject loans
+    const canApproveLoan = profile?.role === 'general_manager';
 
     useEffect(() => {
         if (user) {
@@ -35,21 +42,25 @@ const LoanManagement = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // جلب طلبات السلف
             const { data: requestsData, error: requestsError } = await supabase
-                .from('employee_requests')
+                .from('employee_loans')
                 .select(`
                     *,
-                    profiles:user_id (name_ar, email)
+                    profile:profiles!employee_loans_employee_id_fkey(name_ar, email, phone)
                 `)
-                .eq('request_type', 'loan')
                 .order('created_at', { ascending: false });
 
             if (requestsError) throw requestsError;
-            setLoanRequests(requestsData || []);
+            
+            const formattedData = (requestsData || []).map(loan => ({
+                ...loan,
+                employee_name: loan.profile?.name_ar || 'غير معروف',
+                title: `سلفة رقم ${loan.loan_number}`, 
+                description: loan.reason,
+                installments_count: loan.installments
+            }));
 
-            // The query for loan_installments has been removed to prevent permission errors.
-            // setActiveInstallments([]);
+            setLoanRequests(formattedData);
 
         } catch (error) {
             handleSupabaseError(error, 'فشل في تحميل بيانات طلبات السلف');
@@ -59,27 +70,50 @@ const LoanManagement = () => {
     };
 
     const openReviewModal = (request, action) => {
+        if (!canApproveLoan) {
+            message.error('عذراً، فقط المدير العام يمكنه اتخاذ إجراء على طلبات السلف');
+            return;
+        }
         setSelectedRequest({ ...request, action });
         setReviewNotes('');
         setReviewModalOpen(true);
     };
 
     const handleReview = async () => {
-        if (!selectedRequest) return;
+        if (!selectedRequest || !canApproveLoan) return;
 
         setSubmitting(true);
         try {
+            const updates = {
+                status: selectedRequest.action, 
+                approved_by: user.id,
+                approved_at: new Date().toISOString(),
+            };
+
+            if (selectedRequest.action === 'rejected') {
+                updates.rejection_reason = reviewNotes;
+            }
+
             const { error } = await supabase
-                .from('employee_requests')
-                .update({
-                    status: selectedRequest.action,
-                    reviewed_by: user.id,
-                    reviewed_at: new Date().toISOString(),
-                    review_notes: reviewNotes || null
-                })
+                .from('employee_loans')
+                .update(updates)
                 .eq('id', selectedRequest.id);
 
             if (error) throw error;
+
+            if (updates.status === 'approved') {
+                const { error: notifError } = await supabase.from('notifications').insert({
+                    user_id: selectedRequest.employee_id,
+                    title: 'تمت الموافقة على السلفة',
+                    message: 'يرجى توثيق العقد لإتمام الإجراءات',
+                    type: 'loan_approved',
+                    link: `/loan-verification/${selectedRequest.id}`,
+                    read: false,
+                    created_at: new Date().toISOString()
+                });
+                
+                if (notifError) console.error('Failed to send notification:', notifError);
+            }
 
             message.success(`✅ تم ${selectedRequest.action === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح!`);
             setReviewModalOpen(false);
@@ -97,9 +131,13 @@ const LoanManagement = () => {
             case 'pending':
                 return <Badge variant="secondary">قيد المراجعة</Badge>;
             case 'approved':
-                return <Badge className="bg-green-500 text-white">مقبول</Badge>;
+                return <Badge className="bg-blue-500 text-white">بانتظار التوثيق</Badge>;
+            case 'active':
+                return <Badge className="bg-green-500 text-white">نشطة (موثقة)</Badge>;
             case 'rejected':
                 return <Badge variant="destructive">مرفوض</Badge>;
+            case 'completed':
+                return <Badge variant="outline" className="border-green-500 text-green-500">مسددة</Badge>;
             default:
                 return <Badge>{status}</Badge>;
         }
@@ -113,53 +151,84 @@ const LoanManagement = () => {
 
                 <Tabs defaultValue="requests" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="active">
-                            الأقساط النشطة
-                        </TabsTrigger>
-                        <TabsTrigger value="requests">
-                            طلبات السلف ({loanRequests.filter(r => r.status === 'pending').length})
-                        </TabsTrigger>
+                        <TabsTrigger value="active">الطلبات الموثقة</TabsTrigger>
+                        <TabsTrigger value="requests">طلبات السلف ({loanRequests.filter(r => r.status === 'pending').length})</TabsTrigger>
                         <TabsTrigger value="history">السجل الكامل</TabsTrigger>
                     </TabsList>
 
-                    {/* تبويب الأقساط النشطة */}
                     <TabsContent value="active">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <AlertCircle className="h-5 w-5 text-orange-500" />
-                                    الأقساط النشطة
+                                    الطلبات الموثقة
                                 </CardTitle>
-                                <CardDescription>
-                                    قائمة الأقساط المستحقة للموظفين
-                                </CardDescription>
+                                <CardDescription>قائمة الأقساط المستحقة للموظفين (الموثقة)</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex flex-col items-center justify-center text-center p-8 bg-gray-50 rounded-lg">
-                                    <Info className="h-12 w-12 text-blue-500 mb-4" />
-                                    <h3 className="text-lg font-semibold mb-2">بيانات الأقساط غير متاحة مؤقتاً</h3>
-                                    <p className="text-muted-foreground">
-                                        نعمل حالياً على تحسين هذه الميزة. يرجى التحقق مرة أخرى لاحقاً.
-                                    </p>
-                                </div>
+                                {loading ? (
+                                    <div className="flex justify-center py-8"><Spin size="large" /></div>
+                                ) : loanRequests.filter(r => r.status === 'active').length === 0 ? (
+                                    <Empty description="لا توجد سلف نشطة حالياً" />
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>رقم السلفة</TableHead>
+                                                    <TableHead>الموظف</TableHead>
+                                                    <TableHead>المبلغ الإجمالي</TableHead>
+                                                    <TableHead>القسط الشهري</TableHead>
+                                                    <TableHead>تاريخ التفعيل</TableHead>
+                                                    <TableHead>إجراءات</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {loanRequests.filter(r => r.status === 'active').map((loan) => (
+                                                    <TableRow key={loan.id}>
+                                                        <TableCell className="font-medium">{loan.loan_number}</TableCell>
+                                                        <TableCell>{loan.employee_name}</TableCell>
+                                                        <TableCell>{formatCurrency(loan.amount)}</TableCell>
+                                                        <TableCell>{formatCurrency(loan.monthly_deduction)}</TableCell>
+                                                        <TableCell>{loan.verified_at ? format(new Date(loan.verified_at), 'PP', { locale: ar }) : '-'}</TableCell>
+                                                        <TableCell className="flex space-x-2">
+                                                            <Button variant="outline" size="sm" onClick={() => navigate(`/loan-verification/${loan.id}`)} className="ml-2">
+                                                                <FileText className="h-4 w-4 ml-1" />
+                                                                عرض العقد
+                                                            </Button>
+                                                            <Button variant="outline" size="sm" onClick={() => window.open(`/loan-verification/${loan.id}`, '_blank')} className="ml-2">
+                                                                <Printer className="h-4 w-4 ml-1" />
+                                                                طباعة
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>
 
-                    {/* تبويب طلبات السلف */}
                     <TabsContent value="requests">
                         <Card>
                             <CardHeader>
                                 <CardTitle>طلبات السلف</CardTitle>
-                                <CardDescription>
-                                    مراجعة وموافقة على طلبات السلف
-                                </CardDescription>
+                                <CardDescription>مراجعة وموافقة على طلبات السلف</CardDescription>
                             </CardHeader>
                             <CardContent>
+                                {!canApproveLoan && (
+                                    <Alert className="mb-4 bg-yellow-50 border-yellow-200">
+                                        <Info className="h-4 w-4 text-yellow-600" />
+                                        <AlertTitle className="text-yellow-800">تنبيه صلاحيات</AlertTitle>
+                                        <AlertDescription className="text-yellow-700">
+                                            فقط المدير العام يمتلك صلاحية الموافقة النهائية أو الرفض لطلبات السلف المالية.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
                                 {loading ? (
-                                    <div className="flex justify-center py-8">
-                                        <Spin size="large" />
-                                    </div>
+                                    <div className="flex justify-center py-8"><Spin size="large" /></div>
                                 ) : loanRequests.filter(r => r.status === 'pending').length === 0 ? (
                                     <Empty description="لا توجد طلبات سلف قيد المراجعة" />
                                 ) : (
@@ -169,53 +238,36 @@ const LoanManagement = () => {
                                                 <CardContent className="pt-6">
                                                     <div className="flex justify-between items-start mb-4">
                                                         <div>
-                                                            <h3 className="font-bold text-lg">{request.title}</h3>
-                                                            <p className="text-sm text-gray-600">
-                                                                الموظف: {request.profiles?.name_ar}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                {request.description}
-                                                            </p>
+                                                            <h3 className="font-bold text-lg">{request.loan_number}</h3>
+                                                            <p className="text-sm text-gray-600">الموظف: {request.employee_name}</p>
+                                                            <p className="text-sm text-gray-600">{request.reason}</p>
                                                         </div>
                                                         {getStatusBadge(request.status)}
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-4 mb-4">
                                                         <div>
                                                             <span className="text-sm text-gray-500">المبلغ الإجمالي:</span>
-                                                            <p className="font-bold text-lg text-blue-600">
-                                                                {formatCurrency(request.amount)}
-                                                            </p>
+                                                            <p className="font-bold text-lg text-blue-600">{formatCurrency(request.amount)}</p>
                                                         </div>
                                                         <div>
                                                             <span className="text-sm text-gray-500">عدد الأقساط:</span>
-                                                            <p className="font-bold text-lg">
-                                                                {request.installments_count} قسط
-                                                            </p>
+                                                            <p className="font-bold text-lg">{request.installments} قسط</p>
                                                         </div>
                                                         <div>
                                                             <span className="text-sm text-gray-500">قيمة القسط:</span>
-                                                            <p className="font-bold text-lg text-green-600">
-                                                                {formatCurrency(request.amount / request.installments_count)}
-                                                            </p>
+                                                            <p className="font-bold text-lg text-green-600">{formatCurrency(request.monthly_deduction)}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-sm text-gray-500 mb-4">
                                                         تاريخ التقديم: {format(new Date(request.created_at), 'PPp', { locale: ar })}
                                                     </div>
-                                                    {request.status === 'pending' && (
+                                                    {request.status === 'pending' && canApproveLoan && (
                                                         <div className="flex gap-3">
-                                                            <Button
-                                                                onClick={() => openReviewModal(request, 'approved')}
-                                                                className="flex-1 bg-green-600 hover:bg-green-700"
-                                                            >
+                                                            <Button onClick={() => openReviewModal(request, 'approved')} className="flex-1 bg-green-600 hover:bg-green-700">
                                                                 <CheckCircle className="ml-2 h-4 w-4" />
-                                                                قبول
+                                                                موافقة مبدئية
                                                             </Button>
-                                                            <Button
-                                                                onClick={() => openReviewModal(request, 'rejected')}
-                                                                variant="destructive"
-                                                                className="flex-1"
-                                                            >
+                                                            <Button onClick={() => openReviewModal(request, 'rejected')} variant="destructive" className="flex-1">
                                                                 <XCircle className="ml-2 h-4 w-4" />
                                                                 رفض
                                                             </Button>
@@ -230,20 +282,15 @@ const LoanManagement = () => {
                         </Card>
                     </TabsContent>
 
-                    {/* تبويب السجل الكامل */}
                     <TabsContent value="history">
                         <Card>
                             <CardHeader>
                                 <CardTitle>السجل الكامل للسلف</CardTitle>
-                                <CardDescription>
-                                    جميع طلبات السلف (معتمدة، مرفوضة، مكتملة)
-                                </CardDescription>
+                                <CardDescription>جميع طلبات السلف (معتمدة، مرفوضة، مكتملة)</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {loading ? (
-                                    <div className="flex justify-center py-8">
-                                        <Spin size="large" />
-                                    </div>
+                                    <div className="flex justify-center py-8"><Spin size="large" /></div>
                                 ) : loanRequests.length === 0 ? (
                                     <Empty description="لا توجد طلبات" />
                                 ) : (
@@ -251,26 +298,36 @@ const LoanManagement = () => {
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
+                                                    <TableHead>رقم السلفة</TableHead>
                                                     <TableHead>الموظف</TableHead>
-                                                    <TableHead>العنوان</TableHead>
                                                     <TableHead>المبلغ</TableHead>
                                                     <TableHead>الأقساط</TableHead>
                                                     <TableHead>الحالة</TableHead>
                                                     <TableHead>التاريخ</TableHead>
+                                                    <TableHead>إجراءات</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                 {loanRequests.map((request) => (
                                                     <TableRow key={request.id}>
-                                                        <TableCell className="font-medium">
-                                                            {request.profiles?.name_ar}
-                                                        </TableCell>
-                                                        <TableCell>{request.title}</TableCell>
+                                                        <TableCell className="font-medium">{request.loan_number}</TableCell>
+                                                        <TableCell>{request.employee_name}</TableCell>
                                                         <TableCell>{formatCurrency(request.amount)}</TableCell>
-                                                        <TableCell>{request.installments_count} قسط</TableCell>
+                                                        <TableCell>{request.installments} قسط</TableCell>
                                                         <TableCell>{getStatusBadge(request.status)}</TableCell>
+                                                        <TableCell>{format(new Date(request.created_at), 'PPp', { locale: ar })}</TableCell>
                                                         <TableCell>
-                                                            {format(new Date(request.created_at), 'PPp', { locale: ar })}
+                                                            {request.status === 'approved' && (
+                                                                <Button variant="outline" size="sm" onClick={() => navigate(`/loan-verification/${request.id}`)}>
+                                                                    <ShieldCheck className="w-4 h-4 ml-2" />
+                                                                    رابط التوثيق
+                                                                </Button>
+                                                            )}
+                                                            {(request.status === 'active' || request.status === 'verified') && (
+                                                                <Button variant="ghost" size="sm" onClick={() => window.open(`/loan-verification/${request.id}`, '_blank')} title="طباعة العقد" className="ml-2">
+                                                                    <Printer className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -284,55 +341,45 @@ const LoanManagement = () => {
                 </Tabs>
             </div>
 
-            {/* نافذة المراجعة */}
             <Modal
-                title={selectedRequest?.action === 'approved' ? 'قبول طلب السلفة' : 'رفض طلب السلفة'}
+                title={selectedRequest?.action === 'approved' ? 'موافقة على السلفة' : 'رفض طلب السلفة'}
                 open={reviewModalOpen}
                 onCancel={() => setReviewModalOpen(false)}
                 footer={[
-                    <Button key="cancel" variant="outline" onClick={() => setReviewModalOpen(false)}>
-                        إلغاء
-                    </Button>,
-                    <Button
-                        key="submit"
-                        onClick={handleReview}
-                        disabled={submitting}
-                        className={selectedRequest?.action === 'approved' ? 'bg-green-600' : ''}
-                    >
+                    <Button key="cancel" variant="outline" onClick={() => setReviewModalOpen(false)}>إلغاء</Button>,
+                    <Button key="submit" onClick={handleReview} disabled={submitting} className={selectedRequest?.action === 'approved' ? 'bg-green-600' : ''}>
                         {submitting ? 'جاري المعالجة...' : 'تأكيد'}
                     </Button>,
                 ]}
             >
                 {selectedRequest && (
                     <div className="space-y-4 mt-4">
+                        {selectedRequest.action === 'approved' && (
+                            <Alert className="bg-blue-50 border-blue-200">
+                                <Info className="h-4 w-4 text-blue-600" />
+                                <AlertTitle>تنبيه</AlertTitle>
+                                <AlertDescription>
+                                    عند الموافقة، سيتم تغيير حالة الطلب إلى "بانتظار التوثيق". يجب على الموظف توثيق العقد عبر رمز التحقق لتفعيل السلفة ونزول الأقساط.
+                                </AlertDescription>
+                            </Alert>
+                        )}
                         <div className="p-4 bg-gray-50 rounded-lg">
                             <p className="text-sm text-gray-600">الموظف:</p>
-                            <p className="font-bold">{selectedRequest.profiles?.name_ar}</p>
+                            <p className="font-bold">{selectedRequest.employee_name}</p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-lg">
                             <p className="text-sm text-gray-600">المبلغ الإجمالي:</p>
                             <p className="font-bold">{formatCurrency(selectedRequest.amount)}</p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-600">عدد الأقساط:</p>
-                            <p className="font-bold">{selectedRequest.installments_count} قسط</p>
-                        </div>
-                        <div className="p-4 bg-gray-50 rounded-lg">
                             <p className="text-sm text-gray-600">قيمة القسط الشهري:</p>
-                            <p className="font-bold text-green-600">
-                                {formatCurrency(selectedRequest.amount / selectedRequest.installments_count)}
-                            </p>
+                            <p className="font-bold text-green-600">{formatCurrency(selectedRequest.monthly_deduction)}</p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">
-                                ملاحظات (اختياري)
+                                {selectedRequest.action === 'rejected' ? 'سبب الرفض (مطلوب)' : 'ملاحظات (اختياري)'}
                             </label>
-                            <TextArea
-                                rows={4}
-                                value={reviewNotes}
-                                onChange={(e) => setReviewNotes(e.target.value)}
-                                placeholder="أضف أي ملاحظات..."
-                            />
+                            <TextArea rows={4} value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} placeholder="أضف أي ملاحظات..." required={selectedRequest.action === 'rejected'} />
                         </div>
                     </div>
                 )}

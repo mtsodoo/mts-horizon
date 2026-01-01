@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
@@ -15,9 +16,10 @@ import { handleSupabaseError } from '@/utils/supabaseErrorHandler';
 import { logSystemActivity } from '@/utils/omarTools';
 import { format, parse, differenceInMinutes, isBefore, startOfDay } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { notifyManagerNewRequest } from '@/utils/notificationService';
 
 const RequestPermission = () => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const navigate = useNavigate();
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
@@ -128,6 +130,18 @@ const RequestPermission = () => {
                 }, 
                 data[0].id
             );
+
+            try {
+              await notifyManagerNewRequest(
+                '0539755999',
+                profile?.name_ar || 'موظف',
+                'permission',
+                data?.[0]?.request_number || '',
+                `التاريخ: ${formData.permission_date}\nمن: ${formData.exit_time} إلى: ${formData.return_time}\nالسبب: ${formData.reason || ''}`
+              );
+            } catch (e) {
+              console.log('WhatsApp notification failed:', e);
+            }
 
             message.success('✅ تم إرسال طلب الاستئذان بنجاح!');
             navigate('/dashboard'); 

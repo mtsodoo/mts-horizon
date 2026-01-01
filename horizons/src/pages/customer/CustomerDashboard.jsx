@@ -1,10 +1,12 @@
-
-// src/pages/customer/CustomerDashboard.jsx
-// لوحة تحكم العميل - مربوطة بـ Odoo
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
 
 // Odoo API URL
 const ODOO_API = 'https://ycbplbsrzsuefeqlhxsx.supabase.co/functions/v1/odoo-sync';
@@ -309,9 +311,9 @@ export default function CustomerDashboard() {
   if (!customer) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100" dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
       {/* Header */}
-      <header className="bg-[#714b67] text-white shadow-lg sticky top-0 z-50">
+      <header className="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -354,9 +356,13 @@ export default function CustomerDashboard() {
                   </span>
                 </button>
               )}
-              <button onClick={handleLogout} className="bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-sm">
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout} 
+                className="bg-white/10 hover:bg-white/20 text-white hover:text-white"
+              >
                 خروج
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -397,39 +403,47 @@ export default function CustomerDashboard() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#714b67]"></div>
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
           </div>
         ) : (
           <>
             {/* Dashboard */}
             {currentPage === 'dashboard' && (
               <div className="space-y-6">
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">مرحباً {customer.name} 👋</h2>
-                  <p className="text-gray-600">يمكنك طلب منتجات التشجيع ومتابعة طلباتك</p>
-                </div>
+                <Card className="border-t-4 border-blue-600 shadow-sm">
+                  <CardContent className="p-6">
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">مرحباً {customer.name} </h2>
+                    <p className="text-gray-600">يمكنك طلب منتجات التشجيع ومتابعة طلباتك</p>
+                  </CardContent>
+                </Card>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div className="text-3xl font-bold text-[#714b67]">{orders.length}</div>
-                    <div className="text-sm text-gray-500">إجمالي الطلبات</div>
-                  </div>
-                  <div className="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div className="text-3xl font-bold text-blue-600">{products.length}</div>
-                    <div className="text-sm text-gray-500">المنتجات المتاحة</div>
-                  </div>
-                  <div className="bg-white rounded-xl shadow-sm p-4 text-center">
-                    <div className="text-3xl font-bold text-green-600">
-                      {orders.filter(o => ['sale', 'done'].includes(o.state)).length}
-                    </div>
-                    <div className="text-sm text-gray-500">طلبات مؤكدة</div>
-                  </div>
+                  <Card className="border-t-4 border-blue-600 shadow-sm text-center">
+                    <CardContent className="p-4">
+                      <div className="text-3xl font-bold text-blue-600">{orders.length}</div>
+                      <div className="text-sm text-gray-500">إجمالي الطلبات</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-t-4 border-blue-600 shadow-sm text-center">
+                    <CardContent className="p-4">
+                      <div className="text-3xl font-bold text-blue-600">{products.length}</div>
+                      <div className="text-sm text-gray-500">المنتجات المتاحة</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-t-4 border-green-600 shadow-sm text-center">
+                    <CardContent className="p-4">
+                      <div className="text-3xl font-bold text-green-600">
+                        {orders.filter(o => ['sale', 'done'].includes(o.state)).length}
+                      </div>
+                      <div className="text-sm text-gray-500">طلبات مؤكدة</div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <button
                     onClick={() => setCurrentPage('products')}
-                    className="bg-[#714b67] hover:bg-[#875a7b] text-white rounded-xl p-6 text-right"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-6 text-right transition-colors"
                   >
                     <svg className="w-10 h-10 mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -441,7 +455,7 @@ export default function CustomerDashboard() {
                     onClick={() => setCurrentPage('orders')}
                     className="bg-white hover:bg-gray-50 text-gray-800 rounded-xl p-6 text-right shadow-sm border"
                   >
-                    <svg className="w-10 h-10 mb-3 text-[#714b67]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-10 h-10 mb-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     <h3 className="text-lg font-bold mb-1">طلباتي</h3>
@@ -455,126 +469,136 @@ export default function CustomerDashboard() {
             {currentPage === 'products' && (
               <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                  <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-bold text-gray-800 mb-4">المنتجات المتاحة ({products.length})</h3>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      {products.map(product => {
-                        const inCart = cart.find(item => item.id === product.id);
-                        return (
-                          <div 
-                            key={product.id}
-                            className={`border rounded-lg p-4 transition-all ${
-                              inCart ? 'border-[#714b67] bg-purple-50' : 'hover:border-gray-300'
-                            }`}
-                          >
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <h4 className="font-medium text-gray-800">{product.name}</h4>
-                                <p className="text-xs text-gray-500">{product.default_code}</p>
+                  <Card className="border-t-4 border-blue-600 shadow-sm">
+                    <CardHeader>
+                      <CardTitle>المنتجات المتاحة ({products.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {products.map(product => {
+                          const inCart = cart.find(item => item.id === product.id);
+                          return (
+                            <div 
+                              key={product.id}
+                              className={`border rounded-lg p-4 transition-all ${
+                                inCart ? 'border-blue-600 bg-blue-50' : 'hover:border-gray-300'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 className="font-medium text-gray-800">{product.name}</h4>
+                                  <p className="text-xs text-gray-500">{product.default_code}</p>
+                                </div>
+                                <span className="text-blue-600 font-bold">{product.list_price} ر.س</span>
                               </div>
-                              <span className="text-[#714b67] font-bold">{product.list_price} ر.س</span>
+                              
+                              {inCart ? (
+                                <div className="flex items-center justify-between mt-3">
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => updateQuantity(product.id, -1)}
+                                    className="w-8 h-8 rounded-full"
+                                  >-</Button>
+                                  <span className="font-bold text-lg">{inCart.quantity}</span>
+                                  <Button
+                                    size="icon"
+                                    onClick={() => updateQuantity(product.id, 1)}
+                                    className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700"
+                                  >+</Button>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  onClick={() => addToCart(product)}
+                                  className="w-full mt-3 hover:bg-blue-600 hover:text-white"
+                                >
+                                  إضافة للسلة
+                                </Button>
+                              )}
                             </div>
-                            
-                            {inCart ? (
-                              <div className="flex items-center justify-between mt-3">
-                                <button
-                                  onClick={() => updateQuantity(product.id, -1)}
-                                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                                >-</button>
-                                <span className="font-bold text-lg">{inCart.quantity}</span>
-                                <button
-                                  onClick={() => updateQuantity(product.id, 1)}
-                                  className="w-8 h-8 rounded-full bg-[#714b67] hover:bg-[#875a7b] text-white flex items-center justify-center"
-                                >+</button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => addToCart(product)}
-                                className="w-full mt-3 bg-gray-100 hover:bg-[#714b67] hover:text-white text-gray-700 py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                إضافة للسلة
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 {/* Cart */}
                 <div className="lg:col-span-1">
-                  <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-                    <h3 className="font-bold text-gray-800 mb-4">سلة الطلب</h3>
-
-                    {cart.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <p>السلة فارغة</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                          {cart.map(item => (
-                            <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">{item.name}</div>
-                                <div className="text-xs text-gray-500">
-                                  {item.quantity} × {item.list_price} ر.س
+                  <Card className="border-t-4 border-blue-600 shadow-sm sticky top-24">
+                    <CardHeader>
+                      <CardTitle>سلة الطلب</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {cart.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>السلة فارغة</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                            {cart.map(item => (
+                              <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{item.name}</div>
+                                  <div className="text-xs text-gray-500">
+                                    {item.quantity} × {item.list_price} ر.س
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-blue-600">
+                                    {(item.quantity * item.list_price).toFixed(2)} ر.س
+                                  </span>
+                                  <button
+                                    onClick={() => removeFromCart(item.id)}
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                  >×</button>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-[#714b67]">
-                                  {(item.quantity * item.list_price).toFixed(2)} ر.س
-                                </span>
-                                <button
-                                  onClick={() => removeFromCart(item.id)}
-                                  className="text-red-500 hover:text-red-700 p-1"
-                                >×</button>
-                              </div>
+                            ))}
+                          </div>
+
+                          <div className="mb-4 space-y-2">
+                            <Label>ملاحظات</Label>
+                            <Textarea
+                              value={notes}
+                              onChange={(e) => setNotes(e.target.value)}
+                              rows={2}
+                              placeholder="أي ملاحظات إضافية..."
+                            />
+                          </div>
+
+                          <div className="border-t pt-4 space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>عدد الأصناف:</span>
+                              <span className="font-medium">{cartItemsCount} قطعة</span>
                             </div>
-                          ))}
-                        </div>
+                            <div className="flex justify-between text-sm">
+                              <span>المجموع:</span>
+                              <span className="font-medium">{cartTotal.toFixed(2)} ر.س</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>الضريبة (15%):</span>
+                              <span className="font-medium">{(cartTotal * 0.15).toFixed(2)} ر.س</span>
+                            </div>
+                            <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                              <span>الإجمالي:</span>
+                              <span className="text-blue-600">{(cartTotal * 1.15).toFixed(2)} ر.س</span>
+                            </div>
+                          </div>
 
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
-                          <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            rows={2}
-                            className="w-full px-3 py-2 border rounded-lg text-sm"
-                            placeholder="أي ملاحظات إضافية..."
-                          />
-                        </div>
-
-                        <div className="border-t pt-4 space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>عدد الأصناف:</span>
-                            <span className="font-medium">{cartItemsCount} قطعة</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>المجموع:</span>
-                            <span className="font-medium">{cartTotal.toFixed(2)} ر.س</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>الضريبة (15%):</span>
-                            <span className="font-medium">{(cartTotal * 0.15).toFixed(2)} ر.س</span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>الإجمالي:</span>
-                            <span className="text-[#714b67]">{(cartTotal * 1.15).toFixed(2)} ر.س</span>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={handleSubmitOrder}
-                          disabled={submitting}
-                          className="w-full mt-4 bg-[#714b67] hover:bg-[#875a7b] text-white py-3 rounded-lg font-medium disabled:opacity-50"
-                        >
-                          {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
-                        </button>
-                      </>
-                    )}
-                  </div>
+                          <Button
+                            onClick={handleSubmitOrder}
+                            disabled={submitting}
+                            className="w-full mt-4 bg-blue-600 hover:bg-blue-700"
+                          >
+                            {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
+                          </Button>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             )}
@@ -582,24 +606,25 @@ export default function CustomerDashboard() {
             {/* Orders Page */}
             {currentPage === 'orders' && (
               <div className="space-y-4">
-                <div className="bg-white rounded-xl shadow-sm p-4">
-                  <h3 className="font-bold text-gray-800">طلباتي ({orders.length})</h3>
-                </div>
+                <Card className="border-t-4 border-blue-600 shadow-sm">
+                  <CardContent className="p-4">
+                    <h3 className="font-bold text-gray-800">طلباتي ({orders.length})</h3>
+                  </CardContent>
+                </Card>
 
                 {orders.length === 0 ? (
-                  <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-                    <p className="text-gray-500">لا توجد طلبات</p>
-                    <button
-                      onClick={() => setCurrentPage('products')}
-                      className="mt-4 bg-[#714b67] text-white px-6 py-2 rounded-lg"
-                    >
-                      طلب منتجات
-                    </button>
-                  </div>
+                  <Card className="shadow-sm">
+                    <CardContent className="p-12 text-center">
+                      <p className="text-gray-500 mb-4">لا توجد طلبات</p>
+                      <Button onClick={() => setCurrentPage('products')}>
+                        طلب منتجات
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <div className="space-y-4">
                     {orders.map(order => (
-                      <div key={order.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                      <Card key={order.id} className="shadow-sm overflow-hidden">
                         <div className="p-4 flex items-center justify-between">
                           <div>
                             <div className="font-bold text-gray-800">{order.name}</div>
@@ -608,7 +633,7 @@ export default function CustomerDashboard() {
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="font-bold text-[#714b67]">
+                            <span className="font-bold text-blue-600">
                               {Number(order.amount_total).toFixed(2)} ر.س
                             </span>
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.state).class}`}>
@@ -618,23 +643,25 @@ export default function CustomerDashboard() {
                         </div>
                         
                         <div className="border-t px-4 py-3 bg-gray-50 flex gap-2">
-                          <button
+                          <Button 
+                            variant="link"
                             onClick={() => viewOrderDetails(order.id)}
-                            className="text-sm text-blue-600 hover:text-blue-800"
+                            className="text-blue-600 hover:text-blue-800 p-0 h-auto"
                           >
                             عرض التفاصيل
-                          </button>
+                          </Button>
                           {(order.state === 'draft' || order.state === 'sent') && (
-                            <button
+                            <Button
+                              variant="link"
                               onClick={() => sendApprovalOTP(order)}
                               disabled={otpLoading}
-                              className="text-sm text-green-600 hover:text-green-800 mr-4"
+                              className="text-green-600 hover:text-green-800 mr-4 p-0 h-auto"
                             >
                               الموافقة على الطلب
-                            </button>
+                            </Button>
                           )}
                         </div>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 )}
@@ -647,14 +674,12 @@ export default function CustomerDashboard() {
       {/* Order Details Modal */}
       {selectedOrder && orderDetails && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
-            <div className="bg-[#714b67] text-white p-4 sticky top-0">
-              <div className="flex items-center justify-between">
+          <Card className="w-full max-w-lg max-h-[80vh] overflow-y-auto border-t-4 border-blue-600">
+            <div className="bg-blue-600 text-white p-4 sticky top-0 flex items-center justify-between">
                 <h2 className="font-bold">{orderDetails.name}</h2>
                 <button onClick={() => { setSelectedOrder(null); setOrderDetails(null); }} className="text-2xl">&times;</button>
-              </div>
             </div>
-            <div className="p-4">
+            <CardContent className="p-4">
               <div className="mb-4">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(orderDetails.state).class}`}>
                   {getStatusBadge(orderDetails.state).label}
@@ -674,59 +699,62 @@ export default function CustomerDashboard() {
               <div className="mt-4 pt-4 border-t text-left font-bold text-lg">
                 الإجمالي: {Number(orderDetails.amount_total).toFixed(2)} ر.س
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Approval OTP Modal */}
       {approvalModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl w-full max-w-md">
-            <div className="bg-[#714b67] text-white p-4 text-center">
+          <Card className="w-full max-w-md border-t-4 border-blue-600">
+            <div className="bg-blue-600 text-white p-4 text-center">
               <h2 className="font-bold">تأكيد الموافقة</h2>
               <p className="text-sm opacity-90">{approvalModal.name}</p>
             </div>
-            <div className="p-6">
+            <CardContent className="p-6">
               {!otpSent ? (
-                <div className="text-center">
-                  <p className="mb-4">سيتم إرسال رمز التحقق لجوالك</p>
-                  <button
+                <div className="text-center space-y-4">
+                  <p>سيتم إرسال رمز التحقق لجوالك</p>
+                  <Button
                     onClick={() => sendApprovalOTP(approvalModal)}
                     disabled={otpLoading}
-                    className="bg-[#714b67] text-white px-6 py-2 rounded-lg"
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
+                    {otpLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
                     {otpLoading ? 'جاري الإرسال...' : 'إرسال الرمز'}
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <div>
-                  <p className="text-center mb-4">أدخل رمز التحقق</p>
-                  <input
+                <div className="space-y-4">
+                  <p className="text-center">أدخل رمز التحقق</p>
+                  <Input
                     type="tel"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
-                    className="w-full px-4 py-3 border-2 rounded-lg text-center font-mono text-2xl tracking-widest mb-4"
+                    className="text-center font-mono text-2xl tracking-widest"
                     maxLength={6}
                   />
-                  <button
+                  <Button
                     onClick={confirmApproval}
                     disabled={otpLoading || otpCode.length !== 6}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:opacity-50"
+                    className="w-full bg-green-600 hover:bg-green-700"
                   >
+                    {otpLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
                     {otpLoading ? 'جاري التأكيد...' : 'تأكيد الموافقة'}
-                  </button>
+                  </Button>
                 </div>
               )}
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => { setApprovalModal(null); setOtpCode(''); setOtpSent(false); }}
-                className="w-full mt-3 text-gray-500 py-2"
+                className="w-full mt-3"
               >
                 إلغاء
-              </button>
-            </div>
-          </div>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       )}
 

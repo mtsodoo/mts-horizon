@@ -1,11 +1,12 @@
 
-// src/pages/customer/CustomerLogin.jsx
-// صفحة تسجيل دخول العملاء بنظام OTP
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
-import { Phone, KeyRound, Loader2, Building2, FileText, Shield, Mail, ArrowLeft } from 'lucide-react';
+import { Phone, KeyRound, Loader2, Building2, FileText, Shield, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function CustomerLogin() {
   const navigate = useNavigate();
@@ -159,57 +160,55 @@ export default function CustomerLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-        
-        {/* Header */}
-        <div className="bg-[#714b67] text-white p-6 text-center">
-          <div className="w-16 h-16 bg-white/15 rounded-lg flex items-center justify-center mx-auto mb-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
+      <Card className="w-full max-w-md border-t-4 border-blue-600 shadow-lg">
+        <CardHeader className="text-center pb-2">
+          <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-bold mb-2">بوابة العملاء</h1>
-          <p className="text-sm opacity-90">نظام إدارة طلبات الجماهير</p>
+          <CardTitle className="text-2xl font-bold text-gray-800">بوابة العملاء</CardTitle>
+          <CardDescription>نظام إدارة طلبات الجماهير</CardDescription>
+        </CardHeader>
+
+        <div className="px-6">
+          <div className="flex border-b mb-6">
+            <button
+              onClick={() => setActiveTab('code')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'code'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              <KeyRound className="w-4 h-4 inline ml-2" />
+              كود العميل
+            </button>
+            <button
+              onClick={() => setActiveTab('mobile')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'mobile'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              <Phone className="w-4 h-4 inline ml-2" />
+              رقم الجوال
+            </button>
+            <button
+              onClick={() => setActiveTab('info')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'info'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              <FileText className="w-4 h-4 inline ml-2" />
+              الشروط
+            </button>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('code')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'code'
-                ? 'text-[#714b67] border-b-2 border-[#714b67] bg-purple-50'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <KeyRound className="w-4 h-4 inline ml-2" />
-            كود العميل
-          </button>
-          <button
-            onClick={() => setActiveTab('mobile')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'mobile'
-                ? 'text-[#714b67] border-b-2 border-[#714b67] bg-purple-50'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Phone className="w-4 h-4 inline ml-2" />
-            رقم الجوال
-          </button>
-          <button
-            onClick={() => setActiveTab('info')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'info'
-                ? 'text-[#714b67] border-b-2 border-[#714b67] bg-purple-50'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <FileText className="w-4 h-4 inline ml-2" />
-            الشروط
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
+        <CardContent>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
               {error}
@@ -218,57 +217,53 @@ export default function CustomerLogin() {
 
           {/* Code Tab */}
           {activeTab === 'code' && (
-            <form onSubmit={handleCodeSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  كود العميل
-                </label>
-                <input
+            <form onSubmit={handleCodeSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>كود العميل</Label>
+                <Input
                   type="text"
                   value={customerCode}
                   onChange={(e) => setCustomerCode(e.target.value.toUpperCase())}
                   placeholder="QADISIYA"
                   maxLength={20}
-                  className="w-full px-4 py-3 border rounded-lg text-center font-mono text-lg uppercase tracking-wider focus:ring-2 focus:ring-[#714b67] focus:border-transparent"
+                  className="text-center font-mono text-lg uppercase tracking-wider"
                   disabled={loading}
                 />
-                <p className="text-xs text-gray-500 mt-2">أدخل الكود المخصص لك</p>
+                <p className="text-xs text-gray-500">أدخل الكود المخصص لك</p>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#714b67] hover:bg-[#875a7b] text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin ml-2" />
                     جاري الإرسال...
                   </>
                 ) : (
                   <>
                     إرسال رمز التحقق
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="w-5 h-5 mr-2" />
                   </>
                 )}
-              </button>
+              </Button>
             </form>
           )}
 
           {/* Mobile Tab */}
           {activeTab === 'mobile' && (
-            <form onSubmit={handleMobileSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  رقم الجوال
-                </label>
+            <form onSubmit={handleMobileSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>رقم الجوال</Label>
                 <div className="relative">
-                  <input
+                  <Input
                     type="tel"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     placeholder="05xxxxxxxx"
-                    className="w-full px-4 py-3 border rounded-lg text-left font-mono text-lg tracking-wider focus:ring-2 focus:ring-[#714b67] focus:border-transparent pr-16"
+                    className="text-left font-mono text-lg tracking-wider ltr pr-16"
                     dir="ltr"
                     disabled={loading}
                   />
@@ -276,35 +271,34 @@ export default function CustomerLogin() {
                     +966
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">أدخل رقم الجوال مع الصفر: 05xxxxxxxx</p>
+                <p className="text-xs text-gray-500">أدخل رقم الجوال مع الصفر: 05xxxxxxxx</p>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#714b67] hover:bg-[#875a7b] text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin ml-2" />
                     جاري الإرسال...
                   </>
                 ) : (
                   <>
                     إرسال رمز التحقق
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="w-5 h-5 mr-2" />
                   </>
                 )}
-              </button>
+              </Button>
             </form>
           )}
 
           {/* Info Tab */}
           {activeTab === 'info' && (
             <div className="space-y-4">
-              {/* How it works */}
               <div className="bg-gray-50 border rounded-lg p-4">
-                <h3 className="font-semibold text-[#714b67] mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
                   <Shield className="w-5 h-5" />
                   كيف يعمل النظام؟
                 </h3>
@@ -315,9 +309,8 @@ export default function CustomerLogin() {
                 </ul>
               </div>
 
-              {/* Terms */}
               <div className="bg-gray-50 border rounded-lg p-4 max-h-60 overflow-y-auto">
-                <h3 className="font-semibold text-[#714b67] mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-blue-600 mb-3 flex items-center gap-2">
                   <FileText className="w-5 h-5" />
                   شروط وأحكام الاستخدام
                 </h3>
@@ -330,27 +323,26 @@ export default function CustomerLogin() {
                 </div>
               </div>
 
-              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-center">
-                <p className="text-sm text-teal-700 flex items-center justify-center gap-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                <p className="text-sm text-blue-700 flex items-center justify-center gap-2">
                   <Shield className="w-4 h-4" />
                   هذه البوابة محمية ومشفرة لضمان أمان بياناتك
                 </p>
               </div>
             </div>
           )}
-        </div>
+        </CardContent>
 
-        {/* Footer */}
-        <div className="bg-gray-50 border-t px-6 py-4 text-center">
+        <div className="bg-gray-50 border-t px-6 py-4 text-center rounded-b-xl">
           <p className="text-xs text-gray-500">
             نظام إدارة العملاء - جميع الحقوق محفوظة © {new Date().getFullYear()}
           </p>
-          <a href="/login" className="text-xs text-[#714b67] hover:underline mt-2 inline-block">
+          <a href="/login" className="text-xs text-blue-600 hover:underline mt-2 inline-block">
             دخول الموظفين
           </a>
         </div>
 
-      </div>
+      </Card>
     </div>
   );
 }

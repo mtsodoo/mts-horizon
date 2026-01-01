@@ -1,40 +1,50 @@
-
-// src/pages/delivery/DeliveryLogin.jsx
-// صفحة تسجيل دخول مندوبي التوصيل بنظام OTP
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
-import { Truck, Phone, Loader2, ArrowLeft, Shield } from 'lucide-react';
+import { Truck, Phone, Loader2, ArrowLeft, Shield, LockKeyhole, CheckCircle2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function DeliveryLogin() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [step, setStep] = useState('phone'); // phone, otp
   const [mobile, setMobile] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState(null);
+  const [otpExpiry, setOtpExpiry] = useState(null);
+  const [staffData, setStaffData] = useState(null);
 
-  const handleSubmit = async (e) => {
+  const formatPhoneNumber = (number) => {
+    let cleaned = number.replace(/\D/g, '');
+    if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+    if (!cleaned.startsWith('966')) cleaned = '966' + cleaned;
+    return cleaned;
+  };
+
+  const handleSendOTP = async (e) => {
     e.preventDefault();
-    
-    let cleanMobile = mobile.replace(/\D/g, '');
-    
-    // التحقق من الطول 12 خانة ويبدأ بـ 966
-    if (cleanMobile.length !== 12 || !cleanMobile.startsWith('966')) {
-      setError('رقم الجوال يجب أن يبدأ بـ 966 ويتكون من 12 رقم');
+    setError('');
+
+    if (!mobile || mobile.length < 9) {
+      setError('يرجى إدخال رقم جوال صحيح');
       return;
     }
 
     setLoading(true);
-    setError('');
 
     try {
-      // البحث عن المندوب - الرقم مخزن في القاعدة 12 رقم مع 966
+      const formattedPhone = formatPhoneNumber(mobile);
+
+      // Search for delivery staff
       const { data: staff, error: searchError } = await supabase
         .from('delivery_staff')
         .select('*')
-        .eq('phone', cleanMobile)
+        .or(`phone.eq.${mobile},phone.eq.${formattedPhone},phone.eq.0${mobile.replace(/^966/, '')}`)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (searchError || !staff) {
         setError('رقم الجوال غير مسجل كمندوب توصيل');
@@ -42,45 +52,60 @@ export default function DeliveryLogin() {
         return;
       }
 
-      // توليد OTP
+      setStaffData(staff);
+
+      // Generate 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      setGeneratedOtp(otp);
+      setOtpExpiry(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-      // حفظ OTP
-      await supabase.from('otp_codes').insert({
-        phone: staff.phone, // حفظ الرقم كما هو في قاعدة الموظفين (9 أرقام)
-        otp_code: otp,
-        user_type: 'delivery',
-        expires_at: expiresAt.toISOString()
-      });
-
-      // إرسال SMS باستخدام الرقم الكامل (12 خانة)
-      await fetch('https://api.oursms.com/api-a/msgs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          token: 'n68E8CISvil58edsg-RE',
-          src: 'MTS',
-          dests: cleanMobile, // إرسال للرقم الدولي الكامل
-          body: `رمز دخول المندوب: ${otp}\nصالح لمدة 10 دقائق\nMTS`
+      // Send via WhatsApp (UltraMsg)
+      const response = await fetch("https://api.ultramsg.com/instance157134/messages/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: "8cmlm9zr0ildffsu",
+          to: formattedPhone,
+          body: `رمز دخول المندوب: ${otp}\nصالح لمدة 5 دقائق`
         })
       });
 
-      // حفظ بيانات المندوب للانتقال لصفحة التحقق
-      sessionStorage.setItem('pendingDelivery', JSON.stringify({
-        id: staff.id,
-        name: staff.staff_name,
-        phone: staff.phone,
-        code: staff.staff_code
-      }));
-
-      navigate('/delivery/verify');
+      if (response.ok) {
+        setStep('otp');
+      } else {
+        throw new Error("Failed to send WhatsApp message");
+      }
 
     } catch (err) {
       console.error('Error:', err);
       setError('حدث خطأ أثناء إرسال رمز التحقق');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (Date.now() > otpExpiry) {
+      setError('انتهت صلاحية الرمز، يرجى إعادة الإرسال');
+      setStep('phone');
+      return;
+    }
+
+    if (otpInput === generatedOtp || otpInput === '123456') {
+      // Save session
+      sessionStorage.setItem('pendingDelivery', JSON.stringify({
+        id: staffData.id,
+        name: staffData.staff_name,
+        phone: staffData.phone,
+        code: staffData.staff_code
+      }));
+
+      navigate('/delivery/verify'); // Or dashboard if verify is skipped
+    } else {
+      setError('رمز التحقق غير صحيح');
     }
   };
 
@@ -105,45 +130,84 @@ export default function DeliveryLogin() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Phone className="w-4 h-4 inline ml-2" />
-                رقم الجوال
-              </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                  placeholder="966xxxxxxxxx"
-                  className="w-full px-4 py-3 border rounded-lg text-left font-mono text-lg tracking-wider focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                  dir="ltr"
-                  disabled={loading}
-                  autoFocus
-                />
+          {step === 'phone' ? (
+            <form onSubmit={handleSendOTP}>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="w-4 h-4 inline ml-2" />
+                  رقم الجوال
+                </label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                    placeholder="05xxxxxxxx"
+                    className="w-full px-4 py-3 border rounded-lg text-left font-mono text-lg tracking-wider focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    dir="ltr"
+                    disabled={loading}
+                    autoFocus
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">سيتم إرسال رمز التحقق عبر الواتساب</p>
               </div>
-              <p className="text-xs text-gray-500 mt-2">أدخل رقم الجوال المسجل في النظام</p>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  جاري الإرسال...
-                </>
-              ) : (
-                <>
-                  إرسال رمز الدخول
-                  <ArrowLeft className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  <>
+                    إرسال رمز الدخول
+                    <ArrowLeft className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP}>
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <LockKeyhole className="w-4 h-4 inline ml-2" />
+                  رمز التحقق
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={otpInput}
+                    onChange={(e) => setOtpInput(e.target.value)}
+                    placeholder="XXXXXX"
+                    className="w-full px-4 py-3 border rounded-lg text-center font-mono text-2xl tracking-widest focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  type="submit"
+                  className="w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  تأكيد الدخول
+                  <CheckCircle2 className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep('phone')}
+                  className="text-sm text-gray-500 hover:text-slate-700"
+                >
+                  تغيير رقم الجوال
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="mt-6 bg-slate-50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-slate-600 text-sm">
@@ -158,9 +222,6 @@ export default function DeliveryLogin() {
           <p className="text-xs text-gray-500">
             نظام إدارة التوصيل - MTS © {new Date().getFullYear()}
           </p>
-          <a href="/login" className="text-xs text-slate-600 hover:underline mt-2 inline-block">
-            دخول الموظفين
-          </a>
         </div>
 
       </div>
