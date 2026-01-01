@@ -1,5 +1,6 @@
+
 // ✅ الرابط الصحيح والنهائي للجسر
-const BRIDGE_URL = 'https://sys.mtserp.com/odoo_bridge.php';
+const BRIDGE_URL = 'https://ycbplbsrzsuefeqlhxsx.supabase.co/functions/v1/odoo-sync';
 
 export const syncOdooData = async (payload) => {
   console.log('🚀 Starting Sync with payload:', payload);

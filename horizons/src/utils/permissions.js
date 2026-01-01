@@ -1,4 +1,3 @@
-
 export const ROLES = {
   EMPLOYEE: 'employee',
   MANAGER: 'manager',
@@ -31,12 +30,15 @@ export const PERMISSION_CATEGORIES = {
   OPERATIONS: { label: 'العمليات والطلبات', icon: 'Activity' },
   FINANCE: { label: 'الإدارة المالية', icon: 'Wallet' },
   PROJECTS: { label: 'إدارة المشاريع', icon: 'Briefcase' },
+  LOGISTICS: { label: 'النظام اللوجستي', icon: 'Truck' },
   FILES: { label: 'المجلدات والملفات', icon: 'Folder' },
+  MANAGEMENT_FILES: { label: 'ملفات الإدارة', icon: 'FolderLock' },
   SYSTEM: { label: 'النظام والإعدادات', icon: 'Settings' },
+  EXTERNAL_PORTALS: { label: 'البوابات الخارجية', icon: 'ExternalLink' },
 };
 
 export const PAGE_CONFIG = {
-  // Personal
+  // ========== PERSONAL ==========
   dashboard: { label: 'لوحة التحكم', category: 'PERSONAL' },
   profile: { label: 'الملف الشخصي', category: 'PERSONAL' },
   my_requests: { label: 'طلباتي', category: 'PERSONAL' },
@@ -45,13 +47,18 @@ export const PAGE_CONFIG = {
   files: { label: 'الملفات', category: 'PERSONAL' },
   employee_alerts: { label: 'تنبيهات الموظف', category: 'PERSONAL' },
   attendance: { label: 'سجل الحضور', category: 'PERSONAL' },
+  can_clock_in_out: { label: 'تسجيل الحضور والانصراف', category: 'PERSONAL' },
+  can_view_salary: { label: 'الراتب والأداء', category: 'PERSONAL' },
+  can_view_attendance_calendar: { label: 'كالندر الحضور', category: 'PERSONAL' },
 
-  // Operations
+  // ========== OPERATIONS ==========
   request_approvals: { label: 'الموافقات والطلبات', category: 'OPERATIONS' },
   absence_justification_review: { label: 'مراجعة التبريرات', category: 'OPERATIONS' },
   manager_alerts: { label: 'تنبيهات إدارية', category: 'OPERATIONS' },
+  quotation_approvals: { label: 'موافقات عروض الأسعار', category: 'OPERATIONS' },
+  activity_log: { label: 'سجل العمليات', category: 'OPERATIONS' },
 
-  // Management (HR)
+  // ========== MANAGEMENT (HR) ==========
   employees: { label: 'دليل الموظفين', category: 'MANAGEMENT' },
   employee_management: { label: 'إدارة الموظفين', category: 'MANAGEMENT' },
   attendance_management: { label: 'إدارة الحضور', category: 'MANAGEMENT' },
@@ -59,25 +66,47 @@ export const PAGE_CONFIG = {
   permission_management: { label: 'إدارة الصلاحيات', category: 'MANAGEMENT' },
   admin_messages: { label: 'رسائل الإدارة', category: 'MANAGEMENT' },
   risk_dashboard: { label: 'تحليل المخاطر', category: 'MANAGEMENT' },
+  omar_conversations_management: { label: 'محادثات عمر', category: 'MANAGEMENT' },
+  admin_calendar_panel: { label: 'لوحة كالندر الموظفين', category: 'MANAGEMENT' },
+  gosi_integration: { label: 'التأمينات (GOSI)', category: 'MANAGEMENT' },
 
-  // Projects
-  projects: { label: 'المشاريع', category: 'PROJECTS' },
+  // ========== PROJECTS ==========
+  projects: { label: 'إدارة المشاريع', category: 'PROJECTS' },
+  create_project: { label: 'إنشاء مشروع', category: 'PROJECTS' },
   task_management: { label: 'إدارة المهام', category: 'PROJECTS' },
+  quotation_create: { label: 'إنشاء عرض سعر', category: 'PROJECTS' },
+  quotations_list: { label: 'عروض الأسعار', category: 'PROJECTS' },
+  my_clients: { label: 'عملائي', category: 'PROJECTS' },
+  add_client: { label: 'إضافة عميل', category: 'PROJECTS' },
+  project_discussions: { label: 'مناقشات المشاريع', category: 'PROJECTS' },
 
-  // Files
+  // ========== LOGISTICS ==========
+  logistics_management: { label: 'النظام اللوجستي', category: 'LOGISTICS' },
+  warehouse_management: { label: 'إدارة المخزون', category: 'LOGISTICS' },
+  supply_orders: { label: 'طلبات التوريد', category: 'LOGISTICS' },
+  delivery_reports: { label: 'تقارير التوصيل', category: 'LOGISTICS' },
+  fleet_management: { label: 'إدارة الأسطول', category: 'LOGISTICS' },
+  external_staff: { label: 'الموظفين الخارجيين', category: 'LOGISTICS' },
+  handover_certificates: { label: 'محاضر التسليم', category: 'LOGISTICS' },
+
+  // ========== FILES (العامة) ==========
   file_designs: { label: 'مجلد: التصاميم', category: 'FILES' },
   file_monthly_reports: { label: 'مجلد: تقارير شهرية', category: 'FILES' },
   file_policies: { label: 'مجلد: سياسات وإجراءات', category: 'FILES' },
-  file_contracts: { label: 'مجلد: عقود ومستندات', category: 'FILES' },
-  file_invoices: { label: 'مجلد: فواتير', category: 'FILES' },
-  file_attendance_sheets: { label: 'مجلد: كشوف الحضور', category: 'FILES' },
   file_government_docs: { label: 'مجلد: مستندات حكومية', category: 'FILES' },
   file_photo_gallery: { label: 'مجلد: معرض الصور', category: 'FILES' },
-  file_employee_forms: { label: 'مجلد: نماذج الموظفين', category: 'FILES' },
-  file_absence_justifications: { label: 'مجلد: تبريرات الغياب', category: 'FILES' },
-  file_projects: { label: 'مجلد: ملفات المشاريع', category: 'FILES' },
 
-  // Finance
+  // ========== MANAGEMENT FILES (ملفات الإدارة - خاصة) ==========
+  file_contracts: { label: 'مجلد: عقود ومستندات', category: 'MANAGEMENT_FILES' },
+  file_invoices: { label: 'مجلد: فواتير', category: 'MANAGEMENT_FILES' },
+  file_attendance_sheets: { label: 'مجلد: كشوف الحضور', category: 'MANAGEMENT_FILES' },
+  file_employee_forms: { label: 'مجلد: نماذج الموظفين', category: 'MANAGEMENT_FILES' },
+  file_absence_justifications: { label: 'مجلد: تبريرات الغياب', category: 'MANAGEMENT_FILES' },
+  file_projects: { label: 'مجلد: ملفات المشاريع', category: 'MANAGEMENT_FILES' },
+  file_operations: { label: 'مجلد: ملفات العمليات', category: 'MANAGEMENT_FILES' },
+  file_financial: { label: 'مجلد: ملفات مالية', category: 'MANAGEMENT_FILES' },
+
+  // ========== FINANCE ==========
   financial_management: { label: 'الإدارة المالية', category: 'FINANCE' },
   match_data_entry: { label: 'إدخال بيانات المباريات', category: 'FINANCE' },
   match_review: { label: 'مراجعة المباريات', category: 'FINANCE' },
@@ -85,20 +114,24 @@ export const PAGE_CONFIG = {
   payroll: { label: 'مسير الرواتب', category: 'FINANCE' },
   custody_management: { label: 'إدارة العهد', category: 'FINANCE' },
   loan_management: { label: 'إدارة السلف', category: 'FINANCE' },
+  reports: { label: 'التقارير', category: 'FINANCE' },
 
-  // System
-  activity_log: { label: 'سجل النشاطات', category: 'SYSTEM' },
-  reports: { label: 'التقارير', category: 'SYSTEM' },
+  // ========== SYSTEM ==========
   settings: { label: 'الإعدادات', category: 'SYSTEM' },
   document_stamping: { label: 'ختم المستندات', category: 'SYSTEM' },
-  gosi_integration: { label: 'ربط التأمينات (GOSI)', category: 'SYSTEM' },
+  system_reports: { label: 'تقارير النظام', category: 'SYSTEM' },
+
+  // ========== EXTERNAL PORTALS ==========
+  customer_portal: { label: 'بوابة العملاء', category: 'EXTERNAL_PORTALS' },
+  delivery_portal: { label: 'بوابة المندوبين', category: 'EXTERNAL_PORTALS' },
 };
 
 export const PAGE_KEYS = Object.keys(PAGE_CONFIG);
 export const PAGE_LABELS = Object.fromEntries(Object.entries(PAGE_CONFIG).map(([k, v]) => [k, v.label]));
 
+// ✅ الصلاحيات الافتراضية لكل دور
 export const PERMISSIONS = {
-  // Personal
+  // ========== PERSONAL - للجميع ==========
   dashboard: ROLE_LIST,
   attendance: ROLE_LIST,
   profile: ROLE_LIST,
@@ -107,8 +140,11 @@ export const PERMISSIONS = {
   my_custody_settlements: ROLE_LIST,
   files: ROLE_LIST,
   employee_alerts: ROLE_LIST,
+  can_clock_in_out: ROLE_LIST,
+  can_view_salary: ROLE_LIST,
+  can_view_attendance_calendar: ROLE_LIST,
   
-  // Operations
+  // ========== OPERATIONS ==========
   employees: [
     ROLES.MANAGER, 
     ROLES.OPERATIONS_MANAGER, 
@@ -140,8 +176,19 @@ export const PERMISSIONS = {
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
+  quotation_approvals: [
+    ROLES.OPERATIONS_MANAGER,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  activity_log: [
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
   
-  // HR Management
+  // ========== HR MANAGEMENT ==========
   employee_management: [
     ROLES.MANAGER, 
     ROLES.GENERAL_MANAGER, 
@@ -179,14 +226,40 @@ export const PERMISSIONS = {
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
+  omar_conversations_management: [
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  admin_calendar_panel: [
+    ROLES.MANAGER,
+    ROLES.OPERATIONS_MANAGER,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  gosi_integration: [
+    ROLES.FINANCE, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
 
-  // Projects
+  // ========== PROJECTS ==========
   projects: [
     ROLES.MANAGER, 
     ROLES.PROJECT_MANAGER, 
     ROLES.PUBLIC_RELATIONS_MANAGER,
     ROLES.OPERATIONS_MANAGER, 
     ROLES.FINANCE, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ إنشاء مشروع - مدير المشاريع + مدير العمليات + المدير العام
+  create_project: [
+    ROLES.PROJECT_MANAGER, 
+    ROLES.OPERATIONS_MANAGER, 
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
@@ -200,53 +273,160 @@ export const PERMISSIONS = {
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
+  quotation_create: [
+    ROLES.PROJECT_MANAGER, 
+    ROLES.OPERATIONS_MANAGER, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  quotations_list: [
+    ROLES.PROJECT_MANAGER, 
+    ROLES.OPERATIONS_MANAGER, 
+    ROLES.FINANCE,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ العملاء - مدير المشاريع + مدير العمليات + المدير العام
+  my_clients: [
+    ROLES.PROJECT_MANAGER, 
+    ROLES.OPERATIONS_MANAGER, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ إضافة عميل - مدير المشاريع + مدير العمليات + المدير العام
+  add_client: [
+    ROLES.PROJECT_MANAGER, 
+    ROLES.OPERATIONS_MANAGER, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  project_discussions: [
+    ROLES.PROJECT_MANAGER, 
+    ROLES.OPERATIONS_MANAGER, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
 
-  // Files
-  file_designs: ROLE_LIST,
-  file_monthly_reports: [
-    ROLES.FINANCE, 
+  // ========== LOGISTICS ==========
+  logistics_management: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  file_policies: ROLE_LIST,
-  file_contracts: [
+  warehouse_management: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  file_invoices: [
-    ROLES.FINANCE, 
+  supply_orders: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  file_attendance_sheets: [
-    ROLES.FINANCE, 
+  delivery_reports: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  file_government_docs: ROLE_LIST,
-  file_photo_gallery: ROLE_LIST,
-  file_employee_forms: [
+  fleet_management: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  file_absence_justifications: [
+  external_staff: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  file_projects: [
+  handover_certificates: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.PROJECT_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
 
-  // Finance
+  // ========== FILES العامة - للجميع ==========
+  file_designs: ROLE_LIST,
+  file_policies: ROLE_LIST,
+  file_government_docs: ROLE_LIST,
+  file_photo_gallery: ROLE_LIST,
+
+  // ========== MANAGEMENT FILES - ملفات الإدارة (خاصة) ==========
+  // ✅ التقارير الشهرية - المالية + الإدارة العليا
+  file_monthly_reports: [
+    ROLES.FINANCE, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ العقود - الإدارة العليا فقط
+  file_contracts: [
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ الفواتير - المالية + الإدارة العليا
+  file_invoices: [
+    ROLES.FINANCE, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ كشوف الحضور - المالية + الإدارة العليا
+  file_attendance_sheets: [
+    ROLES.FINANCE, 
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ نماذج الموظفين - الإدارة العليا فقط
+  file_employee_forms: [
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ تبريرات الغياب - الإدارة العليا فقط
+  file_absence_justifications: [
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ ملفات المشاريع - مدير المشاريع + مدير العمليات + المدير العام
+  file_projects: [
+    ROLES.PROJECT_MANAGER,
+    ROLES.OPERATIONS_MANAGER,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ ملفات العمليات - مدير العمليات + المدير العام
+  file_operations: [
+    ROLES.OPERATIONS_MANAGER,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  // ✅ ملفات مالية - المالية + المدير العام
+  file_financial: [
+    ROLES.FINANCE,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+
+  // ========== FINANCE ==========
   financial_management: [
     ROLES.PUBLIC_RELATIONS_MANAGER,
     ROLES.FINANCE, 
@@ -291,20 +471,16 @@ export const PERMISSIONS = {
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-
-  // System
-  activity_log: [
-    ROLES.GENERAL_MANAGER, 
-    ROLES.ADMIN, 
-    ROLES.SUPER_ADMIN
-  ],
   reports: [
     ROLES.MANAGER, 
     ROLES.PUBLIC_RELATIONS_MANAGER,
+    ROLES.FINANCE,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
+
+  // ========== SYSTEM ==========
   settings: [
     ROLES.GENERAL_MANAGER,
     ROLES.ADMIN, 
@@ -315,8 +491,21 @@ export const PERMISSIONS = {
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN
   ],
-  gosi_integration: [
-    ROLES.FINANCE, 
+  system_reports: [
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+
+  // ========== EXTERNAL PORTALS ==========
+  customer_portal: [
+    ROLES.OPERATIONS_MANAGER,
+    ROLES.GENERAL_MANAGER, 
+    ROLES.ADMIN, 
+    ROLES.SUPER_ADMIN
+  ],
+  delivery_portal: [
+    ROLES.OPERATIONS_MANAGER,
     ROLES.GENERAL_MANAGER, 
     ROLES.ADMIN, 
     ROLES.SUPER_ADMIN

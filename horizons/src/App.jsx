@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/SupabaseAuthContext';
 import { PermissionProvider, usePermission } from '@/contexts/PermissionContext';
+import { CustomerAuthProvider } from '@/contexts/CustomerAuthContext';
 import I18nProvider from '@/contexts/I18nProvider';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import LoginPage from '@/pages/Login';
@@ -53,18 +54,53 @@ import ProductCategories from '@/pages/ProductCategories';
 import MatchReview from '@/pages/MatchReview';
 import Reports from '@/pages/Reports';
 import TeamAttendanceCalendar from '@/pages/TeamAttendanceCalendar';
+import AdminCalendarPanel from '@/pages/AdminCalendarPanel'; 
 import Settings from './pages/Settings';
 import GOSIIntegration from './pages/GOSIIntegration';
-import CustomerLogin from './pages/customer/CustomerLogin';
-import CustomerVerify from './pages/customer/CustomerVerify';
-import CustomerDashboard from './pages/customer/CustomerDashboard';
+import HandoverCertificates from './pages/HandoverCertificates';
+import FolderPermissions from '@/pages/FolderPermissions';
+
+// Landing Page
+import LandingPage from '@/pages/LandingPage';
+
+// Customer Portal Imports
+import CustomerLogin from './pages/CustomerPortal/CustomerLogin';
+import CustomerDashboard from './pages/CustomerPortal/CustomerDashboard';
+import NewSupplyOrder from './pages/CustomerPortal/NewSupplyOrder';
+import MyOrders from './pages/CustomerPortal/MyOrders';
+import CustomerProtectedRoute from './components/CustomerPortal/CustomerProtectedRoute';
+
+import CustomerVerify from './pages/customer/CustomerVerify'; 
 import DeliveryLogin from './pages/delivery/DeliveryLogin';
 import DeliveryVerify from './pages/delivery/DeliveryVerify';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
-import SupplyOrders from './pages/SupplyOrders';
-import DeliveryReports from './pages/DeliveryReports';
-import SystemReports from './pages/SystemReports';
-import OmarConversations from './pages/OmarConversations';
+import SupplyOrders from '@/pages/SupplyOrders';
+import DeliveryReports from '@/pages/DeliveryReports';
+import SystemReports from '@/pages/SystemReports';
+import OmarConversations from '@/pages/OmarConversations';
+import QuotationCreate from '@/pages/QuotationCreate';
+import QuotationsList from '@/pages/QuotationsList';
+import QuotationApprovals from '@/pages/QuotationApprovals';
+import LoanVerification from '@/pages/LoanVerification';
+import FleetManagement from '@/pages/FleetManagement';
+import ExternalStaff from '@/pages/ExternalStaff';
+import MyLoans from '@/pages/MyLoans';
+
+// Customer Pages
+import WarehouseOrder from '@/pages/CustomerPortal/WarehouseOrder';
+import FansOrder from '@/pages/CustomerPortal/FansOrder';
+import OtherOrders from '@/pages/CustomerPortal/OtherOrders';
+
+// Warehouse Management
+import WarehouseManagement from '@/pages/WarehouseManagement';
+
+// New import for MyClients
+import MyClients from '@/pages/MyClients';
+
+// New import for ProjectDiscussion
+import ProjectDiscussion from '@/pages/ProjectDiscussion';
+
+
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 import { ConfigProvider } from 'antd';
@@ -91,7 +127,9 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
                 return;
             }
 
-            const access = checkPermission(requiredPermission);
+            // Grant access if permission is missing (temporary fix for new pages) or explicit
+            const access = requiredPermission ? checkPermission(requiredPermission) : true;
+            
             setHasAccess(access);
             setIsChecking(false);
 
@@ -101,7 +139,7 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
                     title: "تم رفض الوصول",
                     description: "ليس لديك صلاحية لعرض هذه الصفحة.",
                 });
-                navigate('/', { replace: true });
+                navigate('/dashboard', { replace: true });
             }
         }
     }, [authLoading, permLoading, profile, requiredPermission, checkPermission, navigate, toast]);
@@ -136,11 +174,23 @@ const AppRoutes = () => {
 
     return (
         <Routes>
-            <Route path="/login" element={!session ? <LoginPage /> : <Navigate to="/" />} />
+            {/* Landing Page Route */}
+            <Route path="/" element={!session ? <LandingPage /> : <Navigate to="/dashboard" />} />
 
-            <Route path="/customer/login" element={<CustomerLogin />} />
+            <Route path="/login" element={!session ? <LoginPage /> : <Navigate to="/dashboard" />} />
+
+            {/* Customer Portal Routes */}
+            <Route path="/customer-portal" element={<CustomerLogin />} />
+            <Route path="/customer-portal/dashboard" element={<CustomerProtectedRoute><CustomerDashboard /></CustomerProtectedRoute>} />
+            <Route path="/customer-portal/new-order" element={<CustomerProtectedRoute><NewSupplyOrder /></CustomerProtectedRoute>} />
+            <Route path="/customer-portal/my-orders" element={<CustomerProtectedRoute><MyOrders /></CustomerProtectedRoute>} />
+            <Route path="/customer-portal/warehouse-order" element={<CustomerProtectedRoute><WarehouseOrder /></CustomerProtectedRoute>} />
+            <Route path="/customer-portal/fans-order" element={<CustomerProtectedRoute><FansOrder /></CustomerProtectedRoute>} />
+            <Route path="/customer-portal/other-orders" element={<CustomerProtectedRoute><OtherOrders /></CustomerProtectedRoute>} />
+
+            {/* Legacy/Other Portals */}
+            <Route path="/customer/login" element={<Navigate to="/customer-portal" replace />} />
             <Route path="/customer/verify" element={<CustomerVerify />} />
-            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
             <Route path="/delivery/login" element={<DeliveryLogin />} />
             <Route path="/delivery/verify" element={<DeliveryVerify />} />
             <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
@@ -151,7 +201,8 @@ const AppRoutes = () => {
                     session ? (
                         <DashboardLayout>
                             <Routes>
-                                <Route path="/" element={<ProtectedRoute requiredPermission="dashboard"><DashboardPage /></ProtectedRoute>} />
+                                {/* Changed root to /dashboard since / is now LandingPage */}
+                                <Route path="/dashboard" element={<ProtectedRoute requiredPermission="dashboard"><DashboardPage /></ProtectedRoute>} />
                                 <Route path="/attendance" element={<ProtectedRoute requiredPermission="attendance"><AttendancePage /></ProtectedRoute>} />
                                 <Route path="/profile" element={<ProtectedRoute requiredPermission="profile"><ProfilePage /></ProtectedRoute>} />
                                 <Route path="/profile/:id" element={<ProtectedRoute requiredPermission="profile"><ProfilePage /></ProtectedRoute>} />
@@ -166,6 +217,8 @@ const AppRoutes = () => {
                                 <Route path="/my-custody-settlements" element={<ProtectedRoute requiredPermission="my_custody_settlements"><MyCustodySettlements /></ProtectedRoute>} />
                                 <Route path="/custody-settlement/:settlementId" element={<ProtectedRoute requiredPermission="my_custody_settlements"><CustodySettlementDetails /></ProtectedRoute>} />
                                 <Route path="/files" element={<ProtectedRoute requiredPermission="files"><FilesPage /></ProtectedRoute>} />
+                                <Route path="/folder-permissions" element={<ProtectedRoute requiredPermission="permission_management"><FolderPermissions /></ProtectedRoute>} />
+                                <Route path="/my-loans" element={<ProtectedRoute requiredPermission="my_requests"><MyLoans /></ProtectedRoute>} />
 
                                 <Route path="/employees" element={<ProtectedRoute requiredPermission="employees"><EmployeesPage /></ProtectedRoute>} />
                                 <Route path="/operations" element={<ProtectedRoute requiredPermission="request_approvals"><OperationsPage /></ProtectedRoute>} />
@@ -185,8 +238,22 @@ const AppRoutes = () => {
                                 <Route path="/financial-management/custody-settlement-review" element={<ProtectedRoute requiredPermission="financial_management"><CustodySettlementReviewPage /></ProtectedRoute>} />
                                 <Route path="/gosi-integration" element={<ProtectedRoute requiredPermission="gosi_integration"><GOSIIntegration /></ProtectedRoute>} />
                                 <Route path="/supply-orders" element={<ProtectedRoute requiredPermission="supply_orders_management"><SupplyOrders /></ProtectedRoute>} />
+                                <Route path="/handover-certificates" element={<ProtectedRoute requiredPermission="financial_management"><HandoverCertificates /></ProtectedRoute>} />
                                 <Route path="/delivery-reports" element={<ProtectedRoute requiredPermission="delivery_reports_management"><DeliveryReports /></ProtectedRoute>} />
                                 <Route path="/system-reports" element={<ProtectedRoute requiredPermission="reports"><SystemReports /></ProtectedRoute>} />
+                                <Route path="/fleet" element={<ProtectedRoute requiredPermission="fleet_management"><FleetManagement /></ProtectedRoute>} />
+                                <Route path="/external-staff" element={<ProtectedRoute requiredPermission="fleet_management"><ExternalStaff /></ProtectedRoute>} />
+                                {/* New Warehouse Management Route */}
+                                <Route path="/warehouse" element={<ProtectedRoute requiredPermission="supply_orders_management"><WarehouseManagement /></ProtectedRoute>} />
+
+                                {/* New MyClients Route */}
+                                <Route path="/my-clients" element={<ProtectedRoute requiredPermission="projects"><MyClients /></ProtectedRoute>} />
+
+                                {/* Project Routes - Reordered for specificity */}
+                                <Route path="/projects/:projectId/discussion" element={<ProtectedRoute requiredPermission="project_discussion"><ProjectDiscussion /></ProtectedRoute>} />
+                                <Route path="/projects/new" element={<ProtectedRoute requiredPermission="projects"><CreateProjectPage /></ProtectedRoute>} />
+                                <Route path="/projects/:projectId" element={<ProtectedRoute requiredPermission="projects"><ProjectDetailsPage /></ProtectedRoute>} />
+                                <Route path="/projects" element={<ProtectedRoute requiredPermission="projects"><ProjectsPage /></ProtectedRoute>} />
 
                                 <Route path="/employee-management" element={<ProtectedRoute requiredPermission="employee_management"><EmployeeManagement /></ProtectedRoute>} />
                                 <Route path="/attendance-management" element={<ProtectedRoute requiredPermission="attendance_management"><AttendanceManagement /></ProtectedRoute>} />
@@ -200,24 +267,35 @@ const AppRoutes = () => {
                                 <Route path="/risk-dashboard" element={<ProtectedRoute requiredPermission="risk_dashboard"><RiskDashboard /></ProtectedRoute>} />
                                 <Route path="/document-stamping" element={<ProtectedRoute requiredPermission="document_stamping"><DocumentStamping /></ProtectedRoute>} />
                                 
-                                <Route path="/projects" element={<ProtectedRoute requiredPermission="projects"><ProjectsPage /></ProtectedRoute>} />
-                                <Route path="/projects/new" element={<ProtectedRoute requiredPermission="projects"><CreateProjectPage /></ProtectedRoute>} />
-                                <Route path="/projects/:projectId" element={<ProtectedRoute requiredPermission="projects"><ProjectDetailsPage /></ProtectedRoute>} />
                                 <Route path="/master-monitor" element={<ProtectedRoute requiredPermission="risk_dashboard"><MasterMonitor /></ProtectedRoute>} /> 
                                 <Route path="/system-messages" element={<ProtectedRoute requiredPermission="dashboard"><SystemMessages /></ProtectedRoute>} />
                                 <Route path="/product-categories" element={<ProtectedRoute requiredPermission="product_management"><ProductCategories /></ProtectedRoute>} />
                                 <Route path="/omar-conversations" element={<ProtectedRoute requiredPermission="omar_conversations_management"><OmarConversations /></ProtectedRoute>} />
+                                <Route path="/admin-calendar-panel" element={<ProtectedRoute requiredPermission="attendance_management"><AdminCalendarPanel /></ProtectedRoute>} />
+
+                                {/* Quotation Routes */}
+                                <Route path="/quotations" element={<ProtectedRoute requiredPermission="projects"><QuotationsList /></ProtectedRoute>} />
+                                <Route path="/quotations/create" element={<ProtectedRoute requiredPermission="projects"><QuotationCreate /></ProtectedRoute>} />
+                                <Route path="/quotation-approvals" element={<ProtectedRoute requiredPermission="quotation_approvals"><QuotationApprovals /></ProtectedRoute>} />
+
+                                <Route path="/loan-verification/:loanId" element={
+                                  <ProtectedRoute requiredPermission="my_requests">
+                                    <LoanVerification />
+                                  </ProtectedRoute>
+                                } />
 
                                 <Route path="/request-approvals" element={<Navigate to="/operations" replace />} />
 
                                 <Route path="/reports" element={<ProtectedRoute requiredPermission="reports"><Reports /></ProtectedRoute>} />
                                 <Route path="/settings" element={<ProtectedRoute requiredPermission="settings"><Settings /></ProtectedRoute>} />
 
-                                <Route path="*" element={<Navigate to="/" />} />
+                                {/* Catch all unmatched routes and redirect to dashboard */}
+                                <Route path="*" element={<Navigate to="/dashboard" />} />
                             </Routes>
                         </DashboardLayout>
                     ) : (
-                        <Navigate to="/login" />
+                        // If not authenticated and no other route matches, go to root (Landing Page)
+                        <Navigate to="/" />
                     )
                 }
             />
@@ -230,12 +308,14 @@ function App() {
         <ConfigProvider direction="rtl" locale={arEG}>
             <I18nProvider>
                 <AuthProvider>
-                    <PermissionProvider>
-                        <Router>
-                            <AppRoutes />
-                            <Toaster />
-                        </Router>
-                    </PermissionProvider>
+                    <CustomerAuthProvider>
+                        <PermissionProvider>
+                            <Router>
+                                <AppRoutes />
+                                <Toaster />
+                            </Router>
+                        </PermissionProvider>
+                    </CustomerAuthProvider>
                 </AuthProvider>
             </I18nProvider>
         </ConfigProvider>
