@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -26,6 +25,7 @@ import dayjs from 'dayjs';
 import { PERMISSION_CATEGORIES } from '@/utils/permissions';
 import { logSystemActivity } from '@/utils/omarTools';
 import { notifyLateAttendance } from '@/utils/notificationService';
+import OmarAssistant from '@/components/OmarAssistant';
 
 // ========================================
 // 🎨 CALENDAR STYLING
@@ -1127,8 +1127,13 @@ const DashboardPage = () => {
           <PayrollCalendarWidget />
         )}
 
-        {profile?.role === 'general_manager' && (
+{profile?.role === 'general_manager' && (
           <TasksCalendarWidget />
+        )}
+
+        {/* 🤖 مساعد عمر للمدير العام */}
+        {profile?.role === 'general_manager' && (
+          <OmarAssistant />
         )}
       </motion.div>
     </>
