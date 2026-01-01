@@ -31,7 +31,17 @@ import {
   Truck, 
   MessageCircle, 
   User, 
-  Trophy 
+  Trophy,
+  Car,
+  Globe,
+  ExternalLink,
+  Laptop,
+  ClipboardCheck,
+  Building2,
+  ShoppingBag,
+  UserPlus,
+  FileCheck as FileCheckIcon,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { usePermission } from '@/contexts/PermissionContext';
@@ -101,11 +111,16 @@ const Sidebar = ({ className }) => {
     ];
 
     // ═══════════════════════════════════════════════════════════════
-    // 🌐 EXTERNAL PORTALS - بوابات خارجية
+    // 📦 LOGISTICS SYSTEM - النظام اللوجستي
     // ═══════════════════════════════════════════════════════════════
-    const externalPortalsItems = [
-        { to: '/customer/login', icon: Users, label: 'بوابة العملاء', permission: 'customer_portal_access' },
-        { to: '/delivery/login', icon: Truck, label: 'بوابة المندوبين', permission: 'delivery_portal_access' },
+    const logisticsItems = [
+        { to: '/customer-portal', icon: Building2, label: 'بوابة العملاء', permission: 'customer_portal_access' },
+        { to: '/delivery/login', icon: Truck, label: 'بوابة التوصيل', permission: 'delivery_portal_access' },
+        { to: '/supply-orders', icon: ShoppingBag, label: 'طلبات الجماهير', permission: 'supply_orders_management' },
+        { to: '/fleet', icon: Car, label: 'إدارة الأسطول', permission: 'fleet_management' },
+        { to: '/external-staff', icon: UserPlus, label: 'الموظفين الخارجيين', permission: 'fleet_management' },
+        { to: '/handover-certificates', icon: FileCheckIcon, label: 'محاضر التسليم', permission: 'financial_management' },
+        { to: '/delivery-reports', icon: BarChart3, label: 'تقارير التوصيل', permission: 'delivery_reports_management' },
     ];
 
     // ═══════════════════════════════════════════════════════════════
@@ -114,8 +129,6 @@ const Sidebar = ({ className }) => {
     const systemItems = [
         { to: '/activity-log', icon: Activity, label: 'سجل النشاطات', permission: 'activity_log' },
         { to: '/document-stamping', icon: Stamp, label: 'ختم المستندات', permission: 'document_stamping' },
-        { to: '/supply-orders', icon: Package, label: 'طلبات التوريد', permission: 'supply_orders_management' },
-        { to: '/delivery-reports', icon: Truck, label: 'تقارير التوصيل', permission: 'delivery_reports_management' },
         { to: '/system-reports', icon: FileText, label: 'تقارير النظام', permission: 'reports' },
         { to: '/reports', icon: BarChart, label: 'التقارير', permission: 'reports' },
         { to: '/settings', icon: Settings, label: 'الإعدادات', permission: 'settings' },
@@ -184,11 +197,11 @@ const Sidebar = ({ className }) => {
             {/* القوائم */}
             <nav className="flex-1 overflow-y-auto py-4 px-3">
                 {renderSection('شخصي', personalItems, LayoutDashboard)}
+                {renderSection('النظام اللوجستي', logisticsItems, Truck)}
                 {renderSection('العمليات', operationsItems, Activity)}
                 {renderSection('الإدارة', managementItems, Users)}
                 {renderSection('المشاريع', projectsItems, FolderKanban)}
                 {renderSection('المالية', financeItems, Wallet)}
-                {renderSection('بوابات خارجية', externalPortalsItems, Users)}
                 {renderSection('النظام', systemItems, Settings)}
             </nav>
 
