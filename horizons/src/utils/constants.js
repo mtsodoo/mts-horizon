@@ -1,36 +1,37 @@
 // Constants for the application
 
-export const OMAR_ID = 'your-omar-user-id-here'; // Replace with the actual Omar user ID
-export const OMAR_EMAIL = 'omar@example.com'; // Replace with Omar's actual email
-export const OMAR_NAME = 'Omar Hassan'; // Replace with Omar's actual name
+export const OMAR_ID = '57cc2b3c-2666-4097-af22-1235c393762e';
+export const OMAR_EMPLOYEE_NUMBER = 'M25009';
+export const OMAR_NAME = 'عمر';
 
-export const ANNUAL_LEAVE_DAYS = 21; // Default annual leave days for employees
+export const ANNUAL_LEAVE_DAYS = 21;
 
 // Warning thresholds for attendance or performance metrics
 export const WARNING_THRESHOLDS = {
     late: {
-        minutes: 30, // Late by 30 minutes triggers a warning
-        period: 'monthly' // Apply monthly
+        minutes: 30,
+        period: 'monthly'
     },
     absence: {
-        days: 1, // 1 day of unjustified absence triggers a warning
+        days: 1,
         period: 'monthly'
     },
     performance: {
-        score: 70, // Performance score below 70 triggers a warning
+        score: 70,
         period: 'quarterly'
     }
 };
 
-// Deduction amounts or percentages for various violations
-export const DEDUCTION_AMOUNTS = {
+// Deduction formulas (calculated based on employee salary)
+export const DEDUCTION_FORMULAS = {
     late: {
-        perMinute: 0.1, // 0.1 SAR deduction per late minute
-        maxDaily: 60 // Maximum 60 SAR deduction per day for lateness
+        // الخصم = (الراتب اليومي / 60) × دقائق التأخير
+        minMinutes: 20,  // لا خصم إذا أقل من 20 دقيقة
+        formula: 'daily_salary / 60 * late_minutes'
     },
     absence: {
-        perDayPercentage: 0.033, // 3.33% of daily salary for each unjustified absence day (1/30)
-        fixedAmount: 100 // Example: fixed 100 SAR per unjustified absence day
+        // الخصم = الراتب اليومي
+        formula: 'total_salary / 30'
     }
 };
 
@@ -69,6 +70,9 @@ export const ATTENDANCE_STATUSES = {
     ABSENT: 'absent',
     LATE: 'late',
     ON_LEAVE: 'on_leave',
+    PERMISSION: 'permission',
+    MEDICAL_PERMISSION: 'medical_permission',
+    JUSTIFIED: 'justified',
     OFFICIAL_HOLIDAY: 'official_holiday',
     UNKNOWN: 'unknown',
 };
@@ -92,12 +96,12 @@ export const TASK_STATUSES = {
 
 // Default system settings (can be overridden by database settings)
 export const DEFAULT_SYSTEM_SETTINGS = {
-    WORK_START_TIME: '08:00',
-    WORK_END_TIME: '17:00',
+    work_start_time: '10:00:00',
+    work_end_time: '17:30:00',
     GRACE_PERIOD_MINUTES: 20,
-    LATE_THRESHOLD_MINUTES: 30, // For reporting/warning purposes
-    AUTO_CHECKOUT_TIME: '17:00',
-    WEEKEND_DAYS: [5, 6], // Friday and Saturday (0=Sunday, 6=Saturday)
+    LATE_THRESHOLD_MINUTES: 30,
+    AUTO_CHECKOUT_TIME: '20:00',
+    WEEKEND_DAYS: [5, 6],
     DEFAULT_LEAVE_BALANCE: 21,
     WARNING_PERIOD_MONTHS: 3,
     LATE_CHECKOUT_PENALTY_HOURS: 0,
